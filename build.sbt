@@ -2,8 +2,8 @@ ThisBuild / organization := "com.squareoneinsights"
 
 ThisBuild / version := "1.0"
 
- lagomServiceLocatorPort in ThisBuild := 10000
- lagomServiceGatewayPort in ThisBuild := 9010
+ //lagomServiceLocatorPort in ThisBuild := 10000
+ //lagomServiceGatewayPort in ThisBuild := 9010
 
 // the Scala version that will be used for cross-compiled libraries
 ThisBuild / scalaVersion := "2.12.4"
@@ -45,7 +45,7 @@ val kafkaClient =  "org.apache.kafka" % "kafka-clients" % "0.10.0.0"
 
 
 
-lazy val `merchant-portal-lagom-app` = (project in file("."))
+lazy val `merchant-portal-lagom-apps` = (project in file("."))
   .aggregate(`merchant-portal-lagom-app-api`, `merchant-portal-lagom-app-impl`)
 
 lazy val `merchant-portal-lagom-app-api` = (project in file("merchant-portal-lagom-app-api"))
@@ -65,6 +65,7 @@ lazy val `merchant-portal-lagom-app-impl` = (project in file("merchant-portal-la
   .settings(
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceJdbc,
+      lagomScaladslKafkaBroker,
       lagomScaladslApi,
       macwire,
       macwireAkka,
@@ -81,7 +82,9 @@ lazy val `merchant-portal-lagom-app-impl` = (project in file("merchant-portal-la
       circeGeneric,
       circeParser,
       kafkaClient,
-      guice
+      guice,
+      lagomScaladslAkkaDiscovery,
+      akkaDiscoveryKubernetesApi
     )
   )
   .settings(lagomForkedTestSettings)

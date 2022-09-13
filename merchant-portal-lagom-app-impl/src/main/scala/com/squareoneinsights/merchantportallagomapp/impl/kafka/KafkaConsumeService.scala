@@ -1,54 +1,58 @@
 package com.squareoneinsights.merchantportallagomapp.impl.kafka
 
+import akka.actor.ActorSystem
+import akka.kafka.scaladsl.Consumer
+import akka.kafka.{ConsumerMessage, ConsumerSettings, Subscriptions}
+import akka.routing.Broadcast
+import akka.stream.scaladsl.{Sink, Source}
 import com.squareoneinsights.merchantportallagomapp.api.request.RiskScoreReq
 import com.squareoneinsights.merchantportallagomapp.impl.model.ConsumeRiskScore
 import com.squareoneinsights.merchantportallagomapp.impl.repository.MerchantRiskScoreDetailRepo
 import com.typesafe.config.ConfigFactory
-import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.serialization.StringDeserializer
+import play.api.libs.json.Json
 
-import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
-import java.util.{Collections, Properties}
-import java.util.{Collections, Properties}
+import java.util.{Collections, Properties, UUID}
+import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success, Try}
 
 
-class KafkaConsumeService(merchantRiskScoreDetailRepo: MerchantRiskScoreDetailRepo) {
+class KafkaConsumeService(merchantRiskScoreDetailRepo: MerchantRiskScoreDetailRepo,
+                          implicit val system: ActorSystem) {
 
-  private val config = ConfigFactory.load()
- println("Inside KafkaConsumeService...")
-  val brokers = "localhost:9092"
-  val groupId = "group-1"
-  val topic = "merchant-risk-score-data"
-  val props = createConsumerConfig(brokers, groupId)
-  val consumer = new KafkaConsumer[String, String](props)
+  private final val stringDeserializer = new StringDeserializer
+  private final val conf = ConfigFactory.load()
+  private val groupId = UUID.randomUUID().toString
+  private val topic = "merchant-risk-score-data"
+  private val kafkaBootstrapServers = "localhost:9092"
 
-  def createConsumerConfig(brokers: String, groupId: String): Properties = {
-    val props = new Properties()
-    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers)
-    props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId)
-    props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
-    //props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000")
-    //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000")
-    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer")
-    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer")
-    props
+  val createConsumerConfig = {
+    ConsumerSettings(system, stringDeserializer, stringDeserializer)
+      .withBootstrapServers(kafkaBootstrapServers)
+      .withGroupId(groupId)
+      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
+      .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
+      .withProperty(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "5000")
+      .withStopTimeout(0.seconds)
   }
-
-  val run = {
-    println(s"Inside run Received message ")
-    consumer.subscribe(Collections.singletonList(topic))
-    while (true) {
-      val records = consumer.poll(1000)
-      for (record <- records) {
-        val r = ConsumeRiskScore.decoder(record.value())
-        println("consumed message----------->"+r)
-        val q = RiskScoreReq.apply(r.merchantId, r.isApproved)
-        merchantRiskScoreDetailRepo.updatedIsApprovedFlag(q).map {
-          case Left(err) => throw new RuntimeException("Unable to save ifrm flag value \n Error:"+err)
-          case Right(value) => value
+    println(s"Inside run Received message")
+   val x: Source[ConsumerMessage.CommittableMessage[String, String], Consumer.Control] = Consumer.committableSource(createConsumerConfig, Subscriptions.topics(topic))
+  println("value of x ---->"+x)
+  x.map(consumerMsg => {
+      println("consume message ->"+consumerMsg)
+      val message = consumerMsg.record.value()
+      Try(Json.parse(stringDeserializer.deserialize("merchant-risk-score-data", message.getBytes())).as[ConsumeRiskScore]) match {
+        case Success(riskScoreObj) => {
+          println("success -->"+riskScoreObj)
+          val r = RiskScoreReq.apply(riskScoreObj.merchantId, riskScoreObj.isApproved)
+          merchantRiskScoreDetailRepo.updatedIsApprovedFlag(r).map {
+            case Left(err) => throw new RuntimeException("Unable to save ifrm flag value \n Error:"+err)
+            case Right(value) => value
+          }
         }
-        println(s"Received user Detail message:   ${q}")
+        case Failure(exception) => println("Invalid message body " + message, exception)
       }
-    }
-  }
+    }).runWith(Sink.ignore)
 }

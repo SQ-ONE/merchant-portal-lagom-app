@@ -4,6 +4,7 @@ import com.squareoneinsights.merchantportallagomapp.api.MerchantportallagomappSe
 import akka.Done
 import akka.NotUsed
 import com.lightbend.lagom.scaladsl.api.ServiceCall
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import akka.util.Timeout
@@ -40,7 +41,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     }
 
 
-  /* override def addRiskType: ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
+   override def addRiskType: ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
     ServerServiceCall { riskJson =>
       val resp = for {
         toRedis <- EitherT(merchantRiskScoreDetailRepo.insertRiskScore(riskJson))
@@ -54,6 +55,6 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
           if (riskJson.updatedRisk == "High") merchantRiskResp.copy(approvalFlag = "pending") else merchantRiskResp
         }
       }
-    }*/
+    }
 
 }

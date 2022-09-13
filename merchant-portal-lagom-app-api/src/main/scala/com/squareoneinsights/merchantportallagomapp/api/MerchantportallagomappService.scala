@@ -8,26 +8,22 @@ import com.squareoneinsights.merchantportallagomapp.api.request.MerchantRiskScor
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantRiskScoreResp
 import play.api.libs.json.{Format, Json}
 
-object MerchantportallagomappService  {
-  val TOPIC_NAME = "greetings"
-}
-
 trait MerchantportallagomappService extends Service {
 
 
-  def hello(id: String): ServiceCall[NotUsed, String]
+  def hello(name: String): ServiceCall[NotUsed, String]
 
   def getRiskScore(merchantId: String): ServiceCall[NotUsed, MerchantRiskScoreResp]
 
-  //def addRiskType : ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp]
+  def addRiskType : ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp]
 
   override final def descriptor: Descriptor = {
     import Service._
-    // @formatter:off
-    named("merchant-portal-lagom-app")
+    named("merchant-portal-lagom-apps")
       .withCalls(
-        restCall(Method.GET,"/api/hello/:id", hello _),
-        restCall(Method.GET, "/api/v1/merchantportal/risksetting/merchant/:merchantId",  getRiskScore _)
+        restCall(Method.GET,"/api/hello/:name", hello _),
+        restCall(Method.GET, "/api/v1/merchantportal/risksetting/merchant/:merchantId",  getRiskScore _),
+        restCall(Method.POST, "/api/v1/merchantportal/risksetting/merchant",  addRiskType )
        ).withAutoAcl(true)
   }
 }
