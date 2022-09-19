@@ -10,7 +10,7 @@ import com.squareoneinsights.merchantportallagomapp.api.MerchantportallagomappSe
 import com.lightbend.lagom.scaladsl.playjson.JsonSerializerRegistry
 import com.softwaremill.macwire._
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.{KafkaConsumeService, KafkaProduceService}
-import com.squareoneinsights.merchantportallagomapp.impl.repository.MerchantRiskScoreDetailRepo
+import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantRiskScoreDetailRepo}
 import play.api.db.{ConnectionPool, HikariCPComponents}
 import play.api.db.evolutions.EvolutionsComponents
 
@@ -37,6 +37,7 @@ abstract class MerchantportallagomappDevApplication(context: LagomApplicationCon
   override lazy val jsonSerializerRegistry: JsonSerializerRegistry = MerchantportallagomappSerializerRegistry
   lazy val merchantRiskScoreDetailRepo = wire[MerchantRiskScoreDetailRepo]
   lazy val kafkaProduceService = wire[KafkaProduceService]
+  lazy val businessImpactRepo = wire[BusinessImpactRepo]
  wire[KafkaConsumeService]
 }
 
@@ -52,6 +53,7 @@ abstract class MerchantportallagomappApplication(context: LagomApplicationContex
   override lazy val jsonSerializerRegistry: JsonSerializerRegistry = MerchantportallagomappSerializerRegistry
   lazy val merchantRiskScoreDetailRepo = wire[MerchantRiskScoreDetailRepo]
   lazy val kafkaProduceService = wire[KafkaProduceService]
+  lazy val businessImpactRepo = wire[BusinessImpactRepo]
   wire[KafkaConsumeService]
 
 }

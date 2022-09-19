@@ -12,12 +12,13 @@ import cats.data.EitherT
 import com.lightbend.lagom.scaladsl.api.transport.BadRequest
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import com.squareoneinsights.merchantportallagomapp.api.request.MerchantRiskScoreReq
-import com.squareoneinsights.merchantportallagomapp.api.response.MerchantRiskScoreResp
+import com.squareoneinsights.merchantportallagomapp.api.response.{MerchantImpactDataResp, MerchantRiskScoreResp}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
-import com.squareoneinsights.merchantportallagomapp.impl.repository.MerchantRiskScoreDetailRepo
+import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantRiskScoreDetailRepo}
 
 class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRiskScoreDetailRepo,
-                                        kafkaProduceService: KafkaProduceService)
+                                        kafkaProduceService: KafkaProduceService,
+                                        businessImpactRepo: BusinessImpactRepo)
                                        (implicit ec: ExecutionContext)
   extends MerchantportallagomappService {
 
@@ -46,7 +47,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       val resp = for {
         toRedis <- EitherT(merchantRiskScoreDetailRepo.insertRiskScore(riskJson))
         //toRdbms <- EitherT(addRiskToRedis.publishMerchantRiskType(riskJson.merchantId, riskJson.riskType))
-        toKafka <- EitherT(kafkaProduceService.sendMessage(riskJson.merchantId, riskJson.updatedRisk))
+        toKafka <- EitherT(kafkaProduceService.sendMessage(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk))
       } yield(toKafka)
       resp.value.map {
         case Left(err) => throw new MatchError(err)
@@ -57,4 +58,11 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       }
     }
 
+  override def getMerchantImpactData(merchantId: String): ServiceCall[NotUsed, MerchantImpactDataResp] =
+    ServerServiceCall { _ =>
+      businessImpactRepo.fetchBusinessDetail(merchantId).map {
+        case Left(err) => throw BadRequest(s"Error: ${err}")
+        case Right(data) => MerchantImpactDataResp.setMerchantBusinessData(data)
+      }
+    }
 }

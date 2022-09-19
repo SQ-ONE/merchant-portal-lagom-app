@@ -17,14 +17,12 @@ import play.api.Play.materializer
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 
-class KafkaProduceService
-                         {
-
-                           import akka.actor.ActorSystem
-                           import akka.stream.ActorMaterializer
-                           implicit val sys = ActorSystem("MyTest")
-                           implicit val mat = ActorMaterializer()
+class KafkaProduceService {
+  implicit val sys = ActorSystem("MyTest")
+  implicit val mat = ActorMaterializer()
   private val config          = ConfigFactory.load()
   private val broker          = "localhost:9092"
   private val topicName       = "merchant-producer-risk-score-data"
@@ -35,11 +33,9 @@ class KafkaProduceService
       .withBootstrapServers(broker)
   }
 
-
-
-  def sendMessage(merchantId: String, listType: String): Future[Either[String, Done]] = {
+  def sendMessage(merchantId: String, oldRiskListType: String, updatedListType: String): Future[Either[String, Done]] = {
     val producerSet = configureKafkaProducer.createKafkaProducer()
-    val riskScoreReq = MerchantRiskScoreProducer.apply(merchantId, listType)
+    val riskScoreReq = MerchantRiskScoreProducer.apply(merchantId, oldRiskListType, updatedListType)
     val source = List(new ProducerRecord[String, MerchantRiskScoreProducer](topicName, riskScoreReq))
     val q: Future[Done] = Source(source)
       .runWith(Producer.plainSink(configureKafkaProducer, producerSet))

@@ -22,11 +22,11 @@ import scala.util.{Failure, Success, Try}
 class KafkaConsumeService(merchantRiskScoreDetailRepo: MerchantRiskScoreDetailRepo,
                           implicit val system: ActorSystem) {
 
-  private final val stringDeserializer = new StringDeserializer
-  private final val conf = ConfigFactory.load()
-  private val groupId = UUID.randomUUID().toString
-  private val topic = "merchant-risk-score-data"
-  private val kafkaBootstrapServers = "localhost:9092"
+  private final val stringDeserializer  = new StringDeserializer
+  private final val conf                = ConfigFactory.load()
+  private val groupId                   = UUID.randomUUID().toString
+  private val topic                     = "merchant-risk-score-data"
+  private val kafkaBootstrapServers     = "localhost:9092"
 
   val createConsumerConfig = {
     ConsumerSettings(system, stringDeserializer, stringDeserializer)
