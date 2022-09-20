@@ -6,9 +6,7 @@ import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
 
-case class ConsumeRiskScore(merchantId: String,
-                            isApproved: String)
-
+case class ConsumeRiskScore(merchantId: String, isApproved: String)
 
 object ConsumeRiskScore {
 

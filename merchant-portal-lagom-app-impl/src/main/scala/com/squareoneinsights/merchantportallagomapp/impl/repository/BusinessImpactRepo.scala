@@ -7,16 +7,23 @@ import slick.jdbc.PostgresProfile.api._
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends BusinessImpactTrait {
+class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext)
+    extends BusinessImpactTrait {
 
   //val db = Database.forConfig("db.default")
   //val logger: Logger = LoggerFactory.getLogger(BusinessImpactRepo)
   val businessImpactTable = TableQuery[BusinessImpactTable]
 
-  def fetchBusinessDetail(merchantId: String): Future[Either[String, BusinessImpactDetail]] = {
-    val businessImpact = businessImpactTable.filter(col => (col.merchantId === merchantId))
+  def fetchBusinessDetail(
+      merchantId: String
+  ): Future[Either[String, BusinessImpactDetail]] = {
+    val businessImpact =
+      businessImpactTable.filter(col => (col.merchantId === merchantId))
     db.run(businessImpact.result).map { x =>
-      Either.fromOption(x.headOption, s"No Business Impact found for merchantId: ${merchantId}")
+      Either.fromOption(
+        x.headOption,
+        s"No Business Impact found for merchantId: ${merchantId}"
+      )
     }
   }
 
@@ -28,10 +35,23 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
 
 trait BusinessImpactTrait {
 
-  class BusinessImpactTable(tag: Tag) extends Table[BusinessImpactDetail](tag, "merchant_risk_score_data") {
+  class BusinessImpactTable(tag: Tag)
+      extends Table[BusinessImpactDetail](tag, "merchant_risk_score_data") {
 
-    def * = (partnerId, merchantId, lowPaymentAllowed, lowPaymentReview, lowPaymentBlocked, medPaymentAllowed, medPaymentReview,
-      medPaymentBlocked, highPaymentAllowed, highPaymentReview, highPaymentBlocked, updatedTimeStamp) <>
+    def * = (
+      partnerId,
+      merchantId,
+      lowPaymentAllowed,
+      lowPaymentReview,
+      lowPaymentBlocked,
+      medPaymentAllowed,
+      medPaymentReview,
+      medPaymentBlocked,
+      highPaymentAllowed,
+      highPaymentReview,
+      highPaymentBlocked,
+      updatedTimeStamp
+    ) <>
       ((BusinessImpactDetail.apply _).tupled, BusinessImpactDetail.unapply _)
 
     def partnerId = column[Int]("partner_id")

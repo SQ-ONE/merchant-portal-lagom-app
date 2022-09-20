@@ -1,11 +1,9 @@
 package com.squareoneinsights.merchantportallagomapp.impl.common
 
-
 import java.util
 
 import org.apache.kafka.common.serialization.{Serializer, StringSerializer}
 import play.api.libs.json._
-
 
 class JsonSerializer[A: Writes] extends Serializer[A] {
 
