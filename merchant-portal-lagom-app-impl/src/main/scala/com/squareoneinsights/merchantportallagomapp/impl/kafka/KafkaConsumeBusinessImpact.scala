@@ -33,8 +33,8 @@ class KafkaConsumeBusinessImpact(businessImpactRepo: BusinessImpactRepo,
   }
   val x: Source[ConsumerMessage.CommittableMessage[String, String], Consumer.Control] = Consumer.committableSource(createConsumerConfig, Subscriptions.topics(topic))
   private val groupId = UUID.randomUUID().toString
-  private val topic = "merchant-risk-score-data"
-  private val kafkaBootstrapServers = "localhost:9092"
+  private val topic = conf.getString("merchant-portal-business-kafka-consume-topic")
+  private val kafkaBootstrapServers = conf.getString("merchant-portal-business-kafka-consumer-url")
   x.map(consumerMsg => {
     val message = consumerMsg.record.value()
     Try(Json.parse(stringDeserializer.deserialize("merchant-risk-score-data", message.getBytes())).as[BusinessImpactDetail]) match {

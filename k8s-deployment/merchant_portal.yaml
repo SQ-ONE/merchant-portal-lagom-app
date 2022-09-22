@@ -1,0 +1,97 @@
+apiVersion: "apps/v1"
+kind: Deployment
+metadata:
+  name: merchant-portal-lagom-app-api
+spec:
+  selector:
+    matchLabels:
+      app: merchant-portal-lagom-app-api
+  replicas: 3
+
+  template:
+    metadata:
+      labels:
+        app: merchant-portal-lagom-app-api
+    spec:
+      containers:
+        - name: merchant-portal-lagom-app-api
+          image: "vivekmishra91/merchant-portal-lagom-app-impl:1.0-SNAPSHOT_30aug"
+          ports:
+            - name: management
+              containerPort: 8558
+          readinessProbe:
+            httpGet:
+              path: "/ready"
+              port: management
+            periodSeconds: 10
+            failureThreshold: 10
+            initialDelaySeconds: 20
+          livenessProbe:
+            httpGet:
+              path: "/alive"
+              port: management
+            periodSeconds: 10
+            failureThreshold: 10
+            initialDelaySeconds: 20
+          env:
+            - name: JAVA_OPTS
+              value: "-Xms2560m -Xmx5120m -Dconfig.resource=production.conf"
+            - name: APPLICATION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ifrm-re-application-secret
+                  key: secret
+            - name: postgres_URL
+              value: "jdbc:postgresql://postgresserver.myproject.svc.cluster.local:5432/ifrm_acq"
+            - name: postgres_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-ifrm-lnlrdbms
+                  key: postgres_USERNAME
+            - name: postgres_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-ifrm-lnlrdbms
+                  key: postgres_PASSWORD
+            - name: KAFKA_SERVICE_NAME
+              value: "_tcp-clients._tcp.kafkaserver.myproject.svc.cluster.local:9092"
+          envFrom:
+            - configMapRef:
+                name: myproject-cm
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: merchant-portal-lagom-app-api
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 9000
+  selector:
+    app: merchant-portal-lagom-app-api
+  type: LoadBalancer
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pod-reader-merchant-portal
+  namespace: myproject
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "watch", "list"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: read-pods-merchant-portal
+  namespace: myproject
+subjects:
+  - kind: ServiceAccount
+    name: default
+roleRef:
+  kind: Role
+  name: pod-reader-merchant-portal
+  apiGroup: rbac.authorization.k8s.io

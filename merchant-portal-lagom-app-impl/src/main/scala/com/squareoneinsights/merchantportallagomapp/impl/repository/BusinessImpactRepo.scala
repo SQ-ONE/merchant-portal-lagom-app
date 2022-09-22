@@ -28,35 +28,34 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
 
 trait BusinessImpactTrait {
 
-  class BusinessImpactTable(tag: Tag) extends Table[BusinessImpactDetail](tag, "merchant_risk_score_data") {
+  class BusinessImpactTable(tag: Tag) extends Table[BusinessImpactDetail](tag, _schemaName = Option("MERCHANT_PORTAL") , "MERCHANT_RISK_SCORE_DATA") {
 
     def * = (partnerId, merchantId, lowPaymentAllowed, lowPaymentReview, lowPaymentBlocked, medPaymentAllowed, medPaymentReview,
       medPaymentBlocked, highPaymentAllowed, highPaymentReview, highPaymentBlocked, updatedTimeStamp) <>
       ((BusinessImpactDetail.apply _).tupled, BusinessImpactDetail.unapply _)
 
-    def partnerId = column[Int]("partner_id")
+    def partnerId = column[Int]("PARTNER_ID", O.PrimaryKey)
 
-    def merchantId = column[String]("merchant_id")
+    def merchantId = column[String]("MERCHANT_ID" , O.PrimaryKey)
 
-    def lowPaymentAllowed = column[Int]("low_payment_allowed")
+    def lowPaymentAllowed = column[Int]("LOW_PAYMENTS_ALLOWED")
 
-    def lowPaymentReview = column[Int]("low_payment_review")
+    def lowPaymentReview = column[Int]("LOW_PAYMENTS_REVIEW")
 
-    def lowPaymentBlocked = column[Int]("low_payment_blocked")
+    def lowPaymentBlocked = column[Int]("LOW_PAYMENTS_BLOCKED")
 
-    def medPaymentAllowed = column[Int]("med_payment_allowed")
+    def medPaymentAllowed = column[Int]("MED_PAYMENTS_ALLOWED")
 
-    def medPaymentReview = column[Int]("med_payment_review")
+    def medPaymentReview = column[Int]("MED_PAYMENTS_REVIEW")
 
-    def medPaymentBlocked = column[Int]("med_payment_blocked")
+    def medPaymentBlocked = column[Int]("MED_PAYMENTS_BLOCKED")
 
-    def highPaymentAllowed = column[Int]("high_payment_allowed")
+    def highPaymentAllowed = column[Int]("HIGH_PAYMENTS_ALLOWED")
 
-    def highPaymentReview = column[Int]("high_payment_review")
+    def highPaymentReview = column[Int]("HIGH_PAYMENTS_REVIEW")
 
-    def highPaymentBlocked = column[Int]("high_payment_blocked")
+    def highPaymentBlocked = column[Int]("HIGH_PAYMENTS_BLOCKED")
 
-    def updatedTimeStamp = column[LocalDateTime]("updated_time_stamp")
+    def updatedTimeStamp = column[LocalDateTime]("UPDATED_AT")
   }
-
 }

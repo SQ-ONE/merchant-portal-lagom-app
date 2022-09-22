@@ -24,8 +24,8 @@ class KafkaProduceService {
   implicit val sys = ActorSystem("MyTest")
   implicit val mat = ActorMaterializer()
   private val config          = ConfigFactory.load()
-  private val broker          = "localhost:9092"
-  private val topicName       = "merchant-producer-risk-score-data"
+  private val broker          = config.getString("merchant-portal-risk-score-kafka-producer-url")
+  private val topicName       = config.getString("merchant-portal-risk-score-kafka-producer-topic")
   private val producerConfig  = config.getConfig("akka.kafka.producer")
 
   val configureKafkaProducer = {

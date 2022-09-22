@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myproject-cm
+  namespace: myproject
+  labels:
+    app: myproject
+data:
+  MERCHANT_PORTAL_BUSINESS_CONSUMER_TOPIC: ""
+  MERCHANT_PORTAL_BUSINESS_CONSUMER_URL: ""
+  MERCHANT_RISK_SCORE_PRODUCER_URL: ""
+  MERCHANT_RISK_SCORE_PRODUCER_TOPIC: ""
+
