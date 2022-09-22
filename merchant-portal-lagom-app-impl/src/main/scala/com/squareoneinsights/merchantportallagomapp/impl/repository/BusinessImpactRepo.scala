@@ -28,7 +28,7 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
 
 trait BusinessImpactTrait {
 
-  class BusinessImpactTable(tag: Tag) extends Table[BusinessImpactDetail](tag, _schemaName = Option("MERCHANT_PORTAL") , "MERCHANT_RISK_SCORE_DATA") {
+  class BusinessImpactTable(tag: Tag) extends Table[BusinessImpactDetail](tag, _schemaName = Option("IFRM_LIST_LIMITS") , "MERCHANT_RISK_SCORE") {
 
     def * = (partnerId, merchantId, lowPaymentAllowed, lowPaymentReview, lowPaymentBlocked, medPaymentAllowed, medPaymentReview,
       medPaymentBlocked, highPaymentAllowed, highPaymentReview, highPaymentBlocked, updatedTimeStamp) <>
