@@ -46,21 +46,21 @@ class MerchantRiskScoreDetailRepo(db: Database)
 
 trait MerchantRiskScoreDetailTrait {
 
-  class MerchantRiskScoreDetailTable(tag: Tag) extends Table[MerchantRiskScore](tag, "merchant_risk_score") {
+  class MerchantRiskScoreDetailTable(tag: Tag) extends Table[MerchantRiskScore](tag, _schemaName = Option("IFRM_LIST_LIMITS") ,"MERCHANT_RISK_SETTING") {
 
     def * = (requestId, merchantId, oldSliderPosition, updatedSliderPosition, approvalFlag, updateTimestamp) <> ((MerchantRiskScore.apply _).tupled, MerchantRiskScore.unapply)
 
-    def requestId = column[Int]("request_id", O.AutoInc, O.Unique)
+    def requestId = column[Int]("REQUEST_ID", O.AutoInc, O.Unique)
 
-    def merchantId = column[String]("merchant_id")
+    def merchantId = column[String]("MERCHANT_ID")
 
-    def oldSliderPosition = column[String]("old_risk")
+    def oldSliderPosition = column[String]("OLD_RISK")
 
-    def updatedSliderPosition = column[String]("updated_risk")
+    def updatedSliderPosition = column[String]("UPDATED_RISK")
 
-    def approvalFlag = column[String]("approval_flag")
+    def approvalFlag = column[String]("APPROVAL_FLAG")
 
-    def updateTimestamp = column[LocalDateTime]("updated_timestamp")
+    def updateTimestamp = column[LocalDateTime]("UPDATED_TIMESTAMP")
 
     def listType = column[String]("MERCHANT_RISK_TYPE")
   }
