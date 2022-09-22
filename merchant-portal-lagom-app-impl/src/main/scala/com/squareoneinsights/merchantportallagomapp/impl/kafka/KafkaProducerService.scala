@@ -34,6 +34,7 @@ class KafkaProduceService {
   }
 
   def sendMessage(merchantId: String, oldRiskListType: String, updatedListType: String): Future[Either[String, Done]] = {
+    println("Inside sendMessage.......")
     val producerSet = configureKafkaProducer.createKafkaProducer()
     val riskScoreReq = MerchantRiskScoreProducer.apply(merchantId, oldRiskListType, updatedListType)
     val source = List(new ProducerRecord[String, MerchantRiskScoreProducer](topicName, riskScoreReq))

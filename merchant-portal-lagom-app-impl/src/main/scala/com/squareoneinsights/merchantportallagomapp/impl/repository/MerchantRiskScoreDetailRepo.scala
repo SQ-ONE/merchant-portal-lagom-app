@@ -29,6 +29,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
   }
 
   def updatedIsApprovedFlag(riskScoreReq: RiskScoreReq) = {
+    println("updatedIsApprovedFlag.............")
     val updatedFlag = merchantRiskScoreDetailTable.filter(_.merchantId === riskScoreReq.merchantId).map(_.approvalFlag).update(riskScoreReq.isApproved)
     db.run(updatedFlag).map(_ => Done.asRight[String]).recover {
       case ex => ex.getMessage.asLeft[Done]
@@ -36,6 +37,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
   }
 
   def fetchRiskScore(merchantId: String): Future[Either[String, MerchantRiskScoreResp]] = {
+    println("fetchRiskScore.............")
     val fetchMessage = merchantRiskScoreDetailTable.filter(_.merchantId === merchantId)
     db.run(fetchMessage.result.headOption)
       .map { fromTryMerchant =>

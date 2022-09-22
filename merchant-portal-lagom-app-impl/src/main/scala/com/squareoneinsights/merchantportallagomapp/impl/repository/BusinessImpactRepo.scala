@@ -14,6 +14,7 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
   val businessImpactTable = TableQuery[BusinessImpactTable]
 
   def fetchBusinessDetail(merchantId: String): Future[Either[String, BusinessImpactDetail]] = {
+    println("fetchBusinessDetail.............")
     val businessImpact = businessImpactTable.filter(col => (col.merchantId === merchantId))
     db.run(businessImpact.result).map { x =>
       Either.fromOption(x.headOption, s"No Business Impact found for merchantId: ${merchantId}")
@@ -21,6 +22,7 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
   }
 
   def save(businessImpactDetail: BusinessImpactDetail) = {
+    println("save.............")
     val query = businessImpactTable += businessImpactDetail
     db.run(query).map(x => x.asRight[String])
   }
