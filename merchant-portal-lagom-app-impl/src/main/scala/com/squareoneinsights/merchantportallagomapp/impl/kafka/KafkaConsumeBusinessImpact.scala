@@ -22,6 +22,9 @@ class KafkaConsumeBusinessImpact(businessImpactRepo: BusinessImpactRepo,
 
   private final val stringDeserializer = new StringDeserializer
   private final val conf = ConfigFactory.load()
+  private val groupId = UUID.randomUUID().toString
+  private val topic = conf.getString("merchant.portal.business.kafka.consume.topic")
+  private val kafkaBootstrapServers = conf.getString("merchant.portal.business.kafka.consumer-url")
   val createConsumerConfig = {
     ConsumerSettings(system, stringDeserializer, stringDeserializer)
       .withBootstrapServers(kafkaBootstrapServers)
@@ -32,12 +35,10 @@ class KafkaConsumeBusinessImpact(businessImpactRepo: BusinessImpactRepo,
       .withStopTimeout(0.seconds)
   }
   val x: Source[ConsumerMessage.CommittableMessage[String, String], Consumer.Control] = Consumer.committableSource(createConsumerConfig, Subscriptions.topics(topic))
-  private val groupId = UUID.randomUUID().toString
-  private val topic = conf.getString("merchant.portal.business.kafka.consume.topic")
-  private val kafkaBootstrapServers = conf.getString("merchant.portal.business.kafka.consumer-url")
+
   x.map(consumerMsg => {
     val message = consumerMsg.record.value()
-    Try(Json.parse(stringDeserializer.deserialize("merchant-risk-score-data", message.getBytes())).as[BusinessImpactDetail]) match {
+    Try(Json.parse(stringDeserializer.deserialize(topic, message.getBytes())).as[BusinessImpactDetail]) match {
       case Success(merchantBusinessData) => {
         import merchantBusinessData._
         val r = BusinessImpactDetail.apply(partnerId, merchantId, lowPaymentAllowed, lowPaymentReview, lowPaymentBlocked, medPaymentAllowed, medPaymentReview, medPaymentBlocked, highPaymentAllowed, highPaymentReview, highPaymentBlocked, updatedTimeStamp)
