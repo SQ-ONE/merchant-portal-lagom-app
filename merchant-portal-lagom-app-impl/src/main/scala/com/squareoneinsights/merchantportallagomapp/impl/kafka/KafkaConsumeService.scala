@@ -25,8 +25,8 @@ class KafkaConsumeService(merchantRiskScoreDetailRepo: MerchantRiskScoreDetailRe
   private final val stringDeserializer  = new StringDeserializer
   private final val conf                = ConfigFactory.load()
   private val groupId                   = UUID.randomUUID().toString
-  private val topic                     = conf.getString("merchant-portal-risk-score-kafka-consume-topic")
-  private val kafkaBootstrapServers     = conf.getString("merchant-portal-risk-score-kafka-consume-url")
+  private val topic                     =  "" //conf.getString("merchant-portal-risk-score-kafka-consume-topic")
+  private val kafkaBootstrapServers     =  "" //conf.getString("merchant-portal-risk-score-kafka-consume-url")
 
   val createConsumerConfig = {
     ConsumerSettings(system, stringDeserializer, stringDeserializer)
