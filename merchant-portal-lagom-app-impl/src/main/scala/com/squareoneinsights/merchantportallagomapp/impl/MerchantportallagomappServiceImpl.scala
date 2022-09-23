@@ -35,6 +35,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
 
  override def getRiskScore(merchantId: String): ServiceCall[NotUsed, MerchantRiskScoreResp] =
     ServerServiceCall { _ =>
+      println("Inside getRiskScore ****************************************--->")
       merchantRiskScoreDetailRepo.fetchRiskScore(merchantId).map {
         case Left(err) => {
           println("Inside getRiskScore Left--->"+err)
