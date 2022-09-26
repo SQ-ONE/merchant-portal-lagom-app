@@ -25,7 +25,7 @@ trait MerchantportallagomappService extends Service {
       .withCalls(
         restCall(Method.GET,"/api/hello/:name", hello _),
         restCall(Method.GET, "/api/v1/merchantportal/risksetting/merchant/:merchantId",  getRiskScore _),
-        restCall(Method.POST, "/api/v1/merchantportal/risksetting/merchant",  addRiskType ),
+        restCall(Method.POST, "/api/v1/merchantportal/risksetting/merchant/:merchantId",  addRiskType ),
         restCall(Method.GET, "/api/v1/merchantportal/merchant/business/merchantId/:merchantId",  getMerchantImpactData _)
        ).withAutoAcl(true)
   }
