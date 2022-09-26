@@ -19,7 +19,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
 
   //val db = Database.forConfig("postgreDBProfile")
   def insertRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[String, Done]] = {
-    val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Pending" else "Approved"
+    val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
     val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())
     db.run(insertMessage).map { _ =>
       Done.asRight[String]
