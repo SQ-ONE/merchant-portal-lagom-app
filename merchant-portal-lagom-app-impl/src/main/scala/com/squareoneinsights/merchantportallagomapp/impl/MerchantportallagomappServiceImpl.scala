@@ -5,14 +5,14 @@ import akka.Done
 import akka.NotUsed
 import com.lightbend.lagom.scaladsl.api.ServiceCall
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import akka.util.Timeout
 import cats.data.EitherT
 import com.lightbend.lagom.scaladsl.api.transport.BadRequest
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
-import com.squareoneinsights.merchantportallagomapp.api.request.MerchantRiskScoreReq
-import com.squareoneinsights.merchantportallagomapp.api.response.{MerchantImpactDataResp, MerchantRiskScoreResp}
+import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantLoginReq, MerchantRiskScoreReq}
+import com.squareoneinsights.merchantportallagomapp.api.response.{MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantRiskScoreDetailRepo}
 
@@ -72,4 +72,8 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
         case Right(data) => MerchantImpactDataResp.setMerchantBusinessData(data)
       }
     }
+
+  override def login: ServiceCall[MerchantLoginReq, MerchantLoginResp] = ServerServiceCall{_ =>
+    Future(MerchantLoginResp("hfeffbjasdb","django","scala1",true))
+  }
 }

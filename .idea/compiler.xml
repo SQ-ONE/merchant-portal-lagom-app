@@ -5,4 +5,9 @@
       <module name="merchant-portal-lagom-app-impl" target="1.8" />
     </bytecodeTargetLevel>
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="merchant-portal-lagom-app-impl" options="-g -encoding UTF-8 -parameters -Xlint:unchecked -Xlint:deprecation" />
+    </option>
+  </component>
 </project>

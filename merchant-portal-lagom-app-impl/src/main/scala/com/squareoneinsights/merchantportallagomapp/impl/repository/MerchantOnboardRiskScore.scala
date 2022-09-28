@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import slick.jdbc.PostgresProfile.api._
 
 
-class MerchantOnboardRiskScore (db: Database)
+class MerchantOnboardRiskScoreTable (db: Database)
                                (implicit ec: ExecutionContext) extends MerchantRiskScoreDetailTrait{
   val logger: Logger = {
     LoggerFactory.getLogger(getClass)
