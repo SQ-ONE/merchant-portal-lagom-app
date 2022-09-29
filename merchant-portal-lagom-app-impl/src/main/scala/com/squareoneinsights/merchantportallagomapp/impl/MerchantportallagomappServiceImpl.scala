@@ -13,12 +13,16 @@ import com.lightbend.lagom.scaladsl.api.transport.BadRequest
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantLoginReq, MerchantRiskScoreReq}
 import com.squareoneinsights.merchantportallagomapp.api.response.{MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, TokenContent}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
-import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantRiskScoreDetailRepo}
+import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantRiskScoreDetailRepo}
+import org.joda.time.DateTime
 
 class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRiskScoreDetailRepo,
                                         kafkaProduceService: KafkaProduceService,
-                                        businessImpactRepo: BusinessImpactRepo)
+                                        businessImpactRepo: BusinessImpactRepo,
+                                        merchantLoginRepo:MerchantLoginRepo
+                                       )
                                        (implicit ec: ExecutionContext)
   extends MerchantportallagomappService {
 
@@ -73,7 +77,17 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       }
     }
 
-  override def login: ServiceCall[MerchantLoginReq, MerchantLoginResp] = ServerServiceCall{_ =>
-    Future(MerchantLoginResp("hfeffbjasdb","django","scala1",true))
+  override def login: ServiceCall[MerchantLoginReq, MerchantLoginResp] = ServerServiceCall{req =>
+ val jwt = JwtTokenGenerator.generate(TokenContent("11","vaibhav"),new DateTime().plusMinutes(50).toDate)
+
+    println(jwt.authToken)
+    val dataef = for {
+
+     merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
+    } yield merchant
+      dataef.value.map {
+        case Left(err) => throw BadRequest(s"Error: ${err}")
+        case Right(data) => MerchantLoginResp(data.merchantId,data.merchantName,"scala1",data.isLoggedInFlag)
+      }
   }
 }

@@ -4,7 +4,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import akka.Done
 import cats.implicits.{catsSyntaxEitherId, _}
 import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantOnboardRiskScore
-
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 import slick.jdbc.PostgresProfile.api._
