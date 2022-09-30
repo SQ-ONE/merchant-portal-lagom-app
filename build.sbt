@@ -32,7 +32,7 @@ val nimbusJoseJwt = "com.nimbusds" % "nimbus-jose-jwt" % "6.0"
 val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.12.1"
 val scalaikeJdbc = "org.scalikejdbc" %% "scalikejdbc" % "3.0.0"
 val scalikeJdbcConfig = "org.scalikejdbc" %% "scalikejdbc-config" % "3.0.0"
-val postgresSql = "org.postgresql" % "postgresql" % "42.1.1"
+val postgresSql = "org.postgresql" % "postgresql" % "42.2.5"
 val cats = "org.typelevel" %% "cats-core" % "1.4.0"
 val redisClient = "com.github.etaty" %% "rediscala" % "1.8.0"
 val slick = "com.typesafe.slick" %% "slick" % "3.3.3"
@@ -57,6 +57,7 @@ lazy val `merchant-portal-lagom-app-api` = (project in file("merchant-portal-lag
   .settings(
     libraryDependencies ++= Seq(
       lagomScaladslApi,
+      lagomScaladslTestKit,
       accord,
       scalaikeJdbc,
       lagomScaladslPersistenceJdbc,
@@ -72,6 +73,7 @@ lazy val `merchant-portal-lagom-app-impl` = (project in file("merchant-portal-la
       lagomScaladslPersistenceJdbc,
       lagomScaladslKafkaBroker,
       lagomScaladslApi,
+      lagomScaladslTestKit,
       macwire,
       macwireAkka,
       scalaCommon,
