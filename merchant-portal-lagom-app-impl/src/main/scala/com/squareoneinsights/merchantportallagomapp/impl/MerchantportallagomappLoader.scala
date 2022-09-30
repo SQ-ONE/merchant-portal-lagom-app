@@ -9,6 +9,7 @@ import play.api.libs.ws.ahc.AhcWSComponents
 import com.squareoneinsights.merchantportallagomapp.api.MerchantportallagomappService
 import com.lightbend.lagom.scaladsl.playjson.JsonSerializerRegistry
 import com.softwaremill.macwire._
+import com.squareoneinsights.merchantportallagomapp.impl.common.RedisUtility
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.{KafkaConsumeBusinessImpact, KafkaConsumeService, KafkaProduceService}
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantRiskScoreDetailRepo}
 import com.typesafe.config.ConfigFactory
@@ -39,6 +40,7 @@ abstract class MerchantportallagomappDevApplication(context: LagomApplicationCon
   override lazy val lagomServer: LagomServer = serverFor[MerchantportallagomappService](wire[MerchantportallagomappServiceImpl])
   override lazy val jsonSerializerRegistry: JsonSerializerRegistry = MerchantportallagomappSerializerRegistry
   lazy val merchantRiskScoreDetailRepo = wire[MerchantRiskScoreDetailRepo]
+  lazy val redisUtil = wire[RedisUtility]
   lazy val kafkaProduceService = wire[KafkaProduceService]
   lazy val businessImpactRepo = wire[BusinessImpactRepo]
   lazy val merchantLoginRepo = wire[MerchantLoginRepo]
@@ -60,6 +62,7 @@ abstract class MerchantportallagomappApplication(context: LagomApplicationContex
   override lazy val lagomServer: LagomServer = serverFor[MerchantportallagomappService](wire[MerchantportallagomappServiceImpl])
   override lazy val jsonSerializerRegistry: JsonSerializerRegistry = MerchantportallagomappSerializerRegistry
   lazy val merchantRiskScoreDetailRepo = wire[MerchantRiskScoreDetailRepo]
+  lazy val redisUtil = wire[RedisUtility]
   lazy val kafkaProduceService = wire[KafkaProduceService]
   lazy val businessImpactRepo = wire[BusinessImpactRepo]
   lazy val merchantLoginRepo = wire[MerchantLoginRepo]
