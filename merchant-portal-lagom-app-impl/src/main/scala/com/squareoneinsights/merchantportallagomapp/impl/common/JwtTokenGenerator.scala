@@ -18,17 +18,18 @@ object JwtTokenGenerator {
   val config = ConfigFactory.load()
   val secret = config.getString("jwt.encryption.key")
 
-
-  def createToken(content: TokenContent, expiryDate: Date)(implicit format: Format[TokenContent],
-                                                           ec: ExecutionContext):
-  Future[Either[String, Token]] = Future {
+  def createToken(content: TokenContent, expiryDate: Date)(implicit
+      format: Format[TokenContent],
+      ec: ExecutionContext
+  ): Future[Either[String, Token]] = Future {
     Either.fromTry(Try(generate(content, expiryDate))).leftMap {
       case ex: Throwable => ex.getMessage
     }
   }
 
-
-  def generate(content: TokenContent, expiryDate: Date)(implicit format: Format[TokenContent]) = {
+  def generate(content: TokenContent, expiryDate: Date)(implicit
+      format: Format[TokenContent]
+  ) = {
 
     val user = new JWTClaimsSet.Builder()
       .issuer("https://pac4j.org")
@@ -40,18 +41,16 @@ object JwtTokenGenerator {
       .build
 
     val refreshClaim = JwtClaim(user.toString())
-      .expiresIn(100l)
+      .expiresIn(100L)
       .issuedNow
     val refreshToken = JwtJson.encode(refreshClaim, secret, JwtAlgorithm.HS256)
 
     Token(refreshToken)
   }
 
-
-
 }
 
-case class TokenContent(merchantId:String,merchantName:String)
+case class TokenContent(merchantId: String, merchantName: String)
 
 object TokenContent {
   implicit val format: Format[TokenContent] = Json.format
