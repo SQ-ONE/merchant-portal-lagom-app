@@ -94,13 +94,13 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
      _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
       _ <- EitherT(addTokenToRedis(merchant.merchantId, jwt.refreshToken))
     } yield (merchant, jwt)
-    val resp1 = resp.value.map {
+    val response = resp.value.map {
         case Left(err) => throw BadRequest(s"Error: ${err}")
         case Right((data,auth)) =>
-          (MerchantLoginResp(data.merchantId,data.merchantName,"todo",data.isLoggedInFlag), auth)
+          (MerchantLoginResp(data.merchantId,data.merchantName,"merchantMcc",data.isLoggedInFlag), auth)
       }
 
-    resp1 map {
+    response map {
       case (res , auth) =>
       val header =  ResponseHeader.Ok.withHeader("Set-Cookie",
           s"authToken=${auth}; Max-Age=${maxAgeInSeconds}")

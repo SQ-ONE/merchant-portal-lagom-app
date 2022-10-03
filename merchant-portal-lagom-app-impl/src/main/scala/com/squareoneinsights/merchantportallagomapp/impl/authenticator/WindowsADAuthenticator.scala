@@ -26,20 +26,11 @@ object WindowsADAuthenticator {
   val aDDomainName = ConfigFactory.load().getString("windows.ad.domain.name")
   val keystore = ConfigFactory.load().getString("windows.ad.keystore.path")
   val keystorePassword = ConfigFactory.load().getString("windows.ad.keystore.password")
-  val bypass =
-    if (ConfigFactory.load().hasPath("ifrm.windows.ad.authentication.bypass"))
-      ConfigFactory.load().getBoolean("ifrm.windows.ad.authentication.bypass")
-    else {
-      log.info("No config -- ifrm.windows.ad.authentication.bypass -- has been provided. Proceeding with Windows AD Authentication.")
-      false
-    }
+
   val privateKey =  ConfigFactory.load().getString("ifrm.password.decrypt.pkcs8.private.key")
 
   def authenticateUser(user: String, password: String)(implicit ec: ExecutionContext):
   Future[Either[String, String]] = Future {
-    if (bypass)
-      user.asRight[String]
-    else
       improvedADAuthenticator(user, password).bimap(identity(_), _ => user)
   }
 
