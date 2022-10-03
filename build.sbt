@@ -89,7 +89,10 @@ lazy val `merchant-portal-lagom-app-impl` = (project in file("merchant-portal-la
       kafkaClient,
       guice,
       lagomScaladslAkkaDiscovery,
-      akkaDiscoveryKubernetesApi
+      akkaDiscoveryKubernetesApi,
+      jwt,
+      pac4jJwt,
+      nimbusJoseJwt
     )
   )
   .settings(lagomForkedTestSettings)

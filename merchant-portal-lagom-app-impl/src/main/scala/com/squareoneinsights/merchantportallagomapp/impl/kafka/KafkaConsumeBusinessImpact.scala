@@ -25,6 +25,7 @@ class KafkaConsumeBusinessImpact(businessImpactRepo: BusinessImpactRepo,
   private val groupId = UUID.randomUUID().toString
   private val topic = conf.getString("merchant.portal.business.kafka.consume.topic")
   private val kafkaBootstrapServers = conf.getString("merchant.portal.business.kafka.consumer-url")
+  println(s"Inside KafkaConsumeBusinessImpact.................")
   val createConsumerConfig = {
     ConsumerSettings(system, stringDeserializer, stringDeserializer)
       .withBootstrapServers(kafkaBootstrapServers)
@@ -40,11 +41,18 @@ class KafkaConsumeBusinessImpact(businessImpactRepo: BusinessImpactRepo,
     val message = consumerMsg.record.value()
     Try(Json.parse(stringDeserializer.deserialize(topic, message.getBytes())).as[BusinessImpactDetail]) match {
       case Success(merchantBusinessData) => {
+        println(s"Inside KafkaConsumeBusinessImpact Success.................")
         import merchantBusinessData._
         val r = BusinessImpactDetail.apply(partnerId, merchantId, lowPaymentAllowed, lowPaymentReview, lowPaymentBlocked, medPaymentAllowed, medPaymentReview, medPaymentBlocked, highPaymentAllowed, highPaymentReview, highPaymentBlocked, updatedTimeStamp)
         businessImpactRepo.save(r).map {
-          case Left(value) => value
-          case Right(value) => throw BadRequest(s"Failed to consumed and insert record to database \n Error: ${value}")
+          case Left(err) => {
+            println(s"Inside KafkaConsumeBusinessImpact Left.................")
+            throw BadRequest(s"Failed to consumed and insert record to database \n Error: ${err}")
+          }
+          case Right(value) => {
+            println(s"Inside KafkaConsumeBusinessImpact Right................."+value)
+            value
+          }
         }
       }
       case Failure(exception) => println("Invalid message body " + message, exception)
