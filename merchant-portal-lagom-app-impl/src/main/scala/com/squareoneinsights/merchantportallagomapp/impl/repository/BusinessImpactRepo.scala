@@ -1,5 +1,7 @@
 package com.squareoneinsights.merchantportallagomapp.impl.repository
 
+import akka.Done
+import cats.data.EitherT
 import cats.implicits._
 import com.squareoneinsights.merchantportallagomapp.api.request.BusinessImpactDetail
 import slick.jdbc.PostgresProfile.api._
@@ -23,8 +25,41 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
 
   def save(businessImpactDetail: BusinessImpactDetail) = {
     println("save.............")
+    val insertOrSave = for {
+       checkFlag <- EitherT(checkFlag(businessImpactDetail.merchantId))
+       finalOperation <- EitherT(if(checkFlag) update(businessImpactDetail) else insert(businessImpactDetail) )
+    } yield(finalOperation)
+    insertOrSave.value
+  }
+
+  def insert(businessImpactDetail: BusinessImpactDetail) = {
+    println("insert business.............")
     val query = businessImpactTable += businessImpactDetail
-    db.run(query).map(x => x.asRight[String])
+    db.run(query).map(_ => Done.asRight[String]).recover {
+      case ex => ex.getMessage.asLeft[Done]
+    }
+  }
+
+  def update(businessImpactDetail: BusinessImpactDetail) = {
+    println("updated business.............")
+    import businessImpactDetail._
+    val query = businessImpactTable.filter(_.merchantId === merchantId).map(col => (col.lowPaymentAllowed, col.lowPaymentReview, col.lowPaymentBlocked, col.medPaymentAllowed, col.medPaymentReview, col.medPaymentBlocked, col.highPaymentAllowed, col.highPaymentReview, col.highPaymentBlocked, col.updatedTimeStamp))
+      .update(lowPaymentAllowed, lowPaymentReview, lowPaymentBlocked, medPaymentAllowed, medPaymentReview, medPaymentBlocked, highPaymentAllowed, highPaymentReview, highPaymentBlocked, updatedTimeStamp)
+    db.run(query).map(_ => Done.asRight[String]).recover {
+      case ex => ex.getMessage.asLeft[Done]
+    }
+  }
+
+  def checkFlag(merchantId: String): Future[Either[String, Boolean]] = {
+    val containsBay = for {
+      m <- businessImpactTable
+      if m.merchantId like s"%${merchantId}%"
+    } yield m
+    val bayMentioned = containsBay.exists.result
+    db.run(bayMentioned)
+      .map(value => value.asRight[String]).recover {
+      case ex => ex.toString.asLeft[Boolean]
+    }
   }
 }
 
