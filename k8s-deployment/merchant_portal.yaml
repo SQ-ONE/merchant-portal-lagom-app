@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: merchant-portal-lagom-app-api
-          image: "vivekmishra91/merchant-portal-lagom-app-impl:1.0-SNAPSHOT_30aug"
+          image: "akashgulbhile1/merchant-portal-lagom-app-impl:1.0_t014"
           ports:
             - name: management
               containerPort: 8558
