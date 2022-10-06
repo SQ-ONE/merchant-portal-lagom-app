@@ -57,7 +57,7 @@ trait MerchantLoginTrait extends Db {
 
   class MerchantLoginTable(tag: Tag) extends Table[MerchantLogin](tag, _schemaName = Option("IFRM_UDS"), "MERCHANT_LOGIN") {
 
-    def * = (id, merchantName,merchantId, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
+    def * = (id, merchantId,merchantName, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
 
     def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 

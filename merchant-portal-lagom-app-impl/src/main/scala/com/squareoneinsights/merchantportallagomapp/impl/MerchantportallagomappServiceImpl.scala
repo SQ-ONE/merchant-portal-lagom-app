@@ -88,7 +88,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
   override def login = ServerServiceCall{(requestHeader, userLoginDetails) =>
     val resp = for {
      merchant <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName))
-     _ <- EitherT(WindowsADAuthenticator.authenticateUser(userLoginDetails.userName, userLoginDetails.password))
+   //  _ <- EitherT(WindowsADAuthenticator.authenticateUser(userLoginDetails.userName, userLoginDetails.password))
      tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId,merchant.merchantName))
       jwt <- EitherT(JwtTokenGenerator.createToken(tokenContent))
      _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
