@@ -19,6 +19,7 @@ import com.squareoneinsights.merchantportallagomapp.api.response.{MerchantImpact
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
 import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, RedisUtility, TokenContent}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
+import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo}
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantRiskScoreDetailRepo}
 import org.joda.time.DateTime
 
@@ -26,11 +27,11 @@ import scala.util.Try
 
 class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRiskScoreDetailRepo,
                                         kafkaProduceService: KafkaProduceService,
+                                        merchantOnboardRiskScore: MerchantOnboardRiskScore,
                                         businessImpactRepo: BusinessImpactRepo,
                                         merchantLoginRepo:MerchantLoginRepo,
                                         redisUtility: RedisUtility,
-                                        system: ActorSystem
-                                       )
+                                        system: ActorSystem)
                                        (implicit ec: ExecutionContext)
   extends MerchantportallagomappService {
 
@@ -48,18 +49,32 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
  override def getRiskScore(merchantId: String): ServiceCall[NotUsed, MerchantRiskScoreResp] =
     ServerServiceCall { _ =>
       println("Inside getRiskScore ****************************************--->")
+
+      val getMerchantRisk = for {
+        a <- EitherT(merchantRiskScoreDetailRepo.fetchRiskScore(merchantId))
+        ifExist <- EitherT(merchantRiskScoreDetailRepo.checkRiskScoreExist(merchantId))
+        b <- EitherT(if(ifExist) merchantRiskScoreDetailRepo.fetchRiskScore(merchantId) else getMerchantOnboardRiskData(merchantId))
+      } yield (b)
       merchantRiskScoreDetailRepo.fetchRiskScore(merchantId).map {
         case Left(err) => {
-          println("Inside getRiskScore Left--->"+err)
+          println("Inside getRiskScore Left--->" + err)
           throw BadRequest(s"Error: ${err}")
         }
         case Right(data) => {
-          println("Inside getRiskScore--->"+data)
+          println("Inside getRiskScore--->" + data)
           data
         }
       }
     }
 
+  def getMerchantOnboardRiskData(merchantId: String): Future[Either[String, MerchantRiskScoreResp]] = {
+    val getAndUpdateQuery = for {
+      onboardRiskScore <- EitherT(merchantOnboardRiskScore.getInitialRiskType(merchantId))
+      toRedis <- EitherT(merchantRiskScoreDetailRepo.insertRiskScore(MerchantRiskScoreReq.apply(merchantId, onboardRiskScore, onboardRiskScore)))
+      toKafka <- EitherT(kafkaProduceService.sendMessage(merchantId, onboardRiskScore, onboardRiskScore))
+    } yield(MerchantRiskScoreResp.getMerchantObj(merchantId, onboardRiskScore))
+     getAndUpdateQuery.value
+  }
 
    override def addRiskType: ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
     ServerServiceCall { riskJson =>
@@ -71,7 +86,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       resp.value.map {
         case Left(err) => throw new MatchError(err)
         case Right(_) => {
-          val merchantRiskResp = MerchantRiskScoreResp.apply(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk, "approved")
+          val merchantRiskResp = MerchantRiskScoreResp.apply(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk, "approve")
           if (riskJson.updatedRisk == "High") merchantRiskResp.copy(approvalFlag = "pending") else merchantRiskResp
         }
       }
@@ -107,7 +122,6 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
         header -> res
     }
   }
-
 
   def addTokenToRedis(userName: String, authToken: String):
   Future[Either[String, Done]] = Future {

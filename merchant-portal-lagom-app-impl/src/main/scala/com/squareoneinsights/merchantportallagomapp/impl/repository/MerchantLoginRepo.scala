@@ -2,11 +2,12 @@ package com.squareoneinsights.merchantportallagomapp.impl.repository
 
 import akka.Done
 import com.squareoneinsights.merchantportallagomapp.impl.common.Db
-import slick.basic.DatabaseConfig
-import slick.jdbc.JdbcProfile
+import slick.jdbc.PostgresProfile.api._
 import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.impl.model.{Merchant, MerchantLogin, MerchantLoginActivity, MerchantLoginDetails}
 import org.joda.time.LocalDate
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
 
 import java.sql.Date
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,7 +16,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class MerchantLoginRepo(val config: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionContext) extends Db with MerchantLoginTrait with MerchantLoginActivityTrait
 with MerchantTrait {
 
-  import config.profile.api._
 
   val merchantLoginTable = TableQuery[MerchantLoginTable]
 
@@ -50,10 +50,7 @@ with MerchantTrait {
   }
 }
 
-
-trait MerchantLoginTrait extends Db {
-
-  import config.profile.api._
+trait MerchantLoginTrait {
 
   class MerchantLoginTable(tag: Tag) extends Table[MerchantLogin](tag, _schemaName = Option("IFRM_UDS"), "MERCHANT_LOGIN") {
 
@@ -70,11 +67,7 @@ trait MerchantLoginTrait extends Db {
   }
 }
 
-
-
-trait MerchantLoginActivityTrait extends Db {
-
-  import config.profile.api._
+trait MerchantLoginActivityTrait  {
 
   class MerchantLoginActivityTable(tag: Tag) extends Table[MerchantLoginActivity](tag, _schemaName = Option("IFRM_UDS"), "MERCHANT_LOGIN_ACTIVITY") {
 

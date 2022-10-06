@@ -10,4 +10,9 @@ case class MerchantRiskScoreResp(merchantId: String,
 object MerchantRiskScoreResp {
 
   implicit val format: Format[MerchantRiskScoreResp] = Json.format
+
+  def getMerchantObj(merchantId: String,oldRisk: String) = {
+    new MerchantRiskScoreResp(merchantId, oldRisk, oldRisk, "approve")
+
+  }
 }

@@ -44,6 +44,26 @@ class MerchantRiskScoreDetailRepo(db: Database)
         Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant.merchantId, seqMerchant.oldSliderPosition, seqMerchant.updatedSliderPosition, seqMerchant.approvalFlag)), s"No merchant found for MerchantId: ${merchantId}")
       }
   }
+
+  def checkRiskScoreExist(merchantId: String) = {
+    val containsBay = for {
+      m <- merchantRiskScoreDetailTable
+      if m.merchantId like s"%${merchantId}%"
+    } yield m
+    val bayMentioned = containsBay.exists.result
+    db.run(bayMentioned)
+      .map(value => value.asRight[String]).recover {
+      case ex => ex.toString.asLeft[Boolean]
+
+
+      /*    val fetchMessage = merchantRiskScoreDetailTable.filter(_.merchantId === merchantId).exists
+    val x = fetchMessage.
+    db.run(fetchMessage.result.headOption)
+      .map { fromTryMerchant =>
+        Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant.merchantId, seqMerchant.oldSliderPosition, seqMerchant.updatedSliderPosition, seqMerchant.approvalFlag)), s"No merchant found for MerchantId: ${merchantId}")
+      }*/
+    }
+  }
 }
 
 trait MerchantRiskScoreDetailTrait {
