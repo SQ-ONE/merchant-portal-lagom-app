@@ -50,7 +50,7 @@ class MerchantLoginRepo(db: Database)
 
 trait MerchantLoginTrait {
 
-  class MerchantLoginTable(tag: Tag) extends Table[MerchantLogin](tag, _schemaName = Option("IFRM_UDS"), "MERCHANT_LOGIN") {
+  class MerchantLoginTable(tag: Tag) extends Table[MerchantLogin](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_LOGIN") {
 
     def * = (id, merchantId,merchantName, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
 
@@ -67,7 +67,7 @@ trait MerchantLoginTrait {
 
 trait MerchantLoginActivityTrait  {
 
-  class MerchantLoginActivityTable(tag: Tag) extends Table[MerchantLoginActivity](tag, _schemaName = Option("IFRM_UDS"), "MERCHANT_LOGIN_ACTIVITY") {
+  class MerchantLoginActivityTable(tag: Tag) extends Table[MerchantLoginActivity](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_LOGIN_ACTIVITY") {
 
     def * = (activityId,merchantId,loginTime, logOutTime) <> ((MerchantLoginActivity.apply _).tupled, MerchantLoginActivity.unapply)
 
@@ -85,7 +85,7 @@ trait MerchantLoginActivityTrait  {
 
 trait MerchantTrait {
 
-  class MerchantTable(tag: Tag) extends Table[Merchant](tag, _schemaName = Option("IFRM_UDS"), "MERCHANT") {
+  class MerchantTable(tag: Tag) extends Table[Merchant](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT") {
 
     def * = (merchantId , merchantMcc) <> ((Merchant.apply _).tupled, Merchant.unapply)
 
