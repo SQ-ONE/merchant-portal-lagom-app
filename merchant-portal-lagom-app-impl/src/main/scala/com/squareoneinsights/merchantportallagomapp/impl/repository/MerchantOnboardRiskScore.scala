@@ -15,7 +15,7 @@ class MerchantOnboardRiskScore (db: Database)
 
   private val merchantOnboardRiskScoreDetailTable = TableQuery[MerchantOnboardRiskScoreDetailTable]
 
-  def getInitialRiskType(merchantId: String) = {
+  def getInitialRiskType(merchantId: String): Future[Either[String, String]] = {
     val query = merchantOnboardRiskScoreDetailTable.filter(_.merchantId === merchantId).map(_.merchantOnboardScore)
     db.run(query.result.headOption)
       .map { fromTryMerchant =>

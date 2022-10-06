@@ -18,6 +18,18 @@ class MerchantRiskScoreDetailRepo(db: Database)
   private val merchantRiskScoreDetailTable = TableQuery[MerchantRiskScoreDetailTable]
 
   //val db = Database.forConfig("postgreDBProfile")
+  def updateRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[String, Done]] = {
+    val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
+    val update = merchantRiskScoreDetailTable.filter(_.merchantId === riskScoreReq.merchantId).map(row => (row.oldSliderPosition, row.updatedSliderPosition, row.approvalFlag, row.updateTimestamp))
+      .update(riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())
+    //val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())
+    db.run(update).map { _ =>
+      Done.asRight[String]
+    }.recover {
+      case ex => ex.getMessage.asLeft[Done]
+    }
+  }
+
   def insertRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[String, Done]] = {
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
     val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())

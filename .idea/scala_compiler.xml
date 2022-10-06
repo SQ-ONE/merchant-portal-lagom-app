@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <profile name="sbt 1" modules="lagom-internal-meta-project-cassandra,lagom-internal-meta-project-kafka,lagom-internal-meta-project-service-locator,merchant-portal-lagom-app-api,merchant-portal-lagom-app-impl,merchant-portal-lagom-app_2267,merchant-portal-lagom-apps" />
+  </component>
+</project>

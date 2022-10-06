@@ -51,11 +51,11 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       println("Inside getRiskScore ****************************************--->")
 
       val getMerchantRisk = for {
-        a <- EitherT(merchantRiskScoreDetailRepo.fetchRiskScore(merchantId))
+        //a <- EitherT(merchantRiskScoreDetailRepo.fetchRiskScore(merchantId))
         ifExist <- EitherT(merchantRiskScoreDetailRepo.checkRiskScoreExist(merchantId))
         b <- EitherT(if(ifExist) merchantRiskScoreDetailRepo.fetchRiskScore(merchantId) else getMerchantOnboardRiskData(merchantId))
       } yield (b)
-      merchantRiskScoreDetailRepo.fetchRiskScore(merchantId).map {
+      getMerchantRisk.value.map {
         case Left(err) => {
           println("Inside getRiskScore Left--->" + err)
           throw BadRequest(s"Error: ${err}")
@@ -79,7 +79,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
    override def addRiskType: ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
     ServerServiceCall { riskJson =>
       val resp = for {
-        toRedis <- EitherT(merchantRiskScoreDetailRepo.insertRiskScore(riskJson))
+        toRedis <- EitherT(merchantRiskScoreDetailRepo.updateRiskScore(riskJson))
         //toRdbms <- EitherT(addRiskToRedis.publishMerchantRiskType(riskJson.merchantId, riskJson.riskType))
         toKafka <- EitherT(kafkaProduceService.sendMessage(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk))
       } yield(toKafka)
