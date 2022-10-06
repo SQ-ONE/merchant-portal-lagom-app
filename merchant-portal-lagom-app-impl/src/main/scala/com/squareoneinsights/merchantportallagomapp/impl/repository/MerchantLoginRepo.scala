@@ -1,20 +1,17 @@
 package com.squareoneinsights.merchantportallagomapp.impl.repository
 
 import akka.Done
-import com.squareoneinsights.merchantportallagomapp.impl.common.Db
 import slick.jdbc.PostgresProfile.api._
 import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.impl.model.{Merchant, MerchantLogin, MerchantLoginActivity, MerchantLoginDetails}
 import org.joda.time.LocalDate
-import slick.basic.DatabaseConfig
-import slick.jdbc.JdbcProfile
 
 import java.sql.Date
 import scala.concurrent.{ExecutionContext, Future}
 
 
-class MerchantLoginRepo(val config: DatabaseConfig[JdbcProfile])(implicit ec: ExecutionContext) extends Db with MerchantLoginTrait with MerchantLoginActivityTrait
-with MerchantTrait {
+class MerchantLoginRepo(db: Database)
+                       (implicit ec: ExecutionContext) extends  MerchantLoginTrait with MerchantLoginActivityTrait with MerchantTrait {
 
 
   val merchantLoginTable = TableQuery[MerchantLoginTable]
@@ -48,6 +45,7 @@ with MerchantTrait {
       case ex => ex.getMessage.asLeft[Done]
     }
   }
+
 }
 
 trait MerchantLoginTrait {
@@ -85,9 +83,7 @@ trait MerchantLoginActivityTrait  {
 }
 
 
-trait MerchantTrait extends Db {
-
-  import config.profile.api._
+trait MerchantTrait {
 
   class MerchantTable(tag: Tag) extends Table[Merchant](tag, _schemaName = Option("IFRM_UDS"), "MERCHANT") {
 
