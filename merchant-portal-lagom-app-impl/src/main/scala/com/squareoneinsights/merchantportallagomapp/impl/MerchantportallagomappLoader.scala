@@ -36,7 +36,6 @@ abstract class MerchantportallagomappDevApplication(context: LagomApplicationCon
     with EvolutionsComponents
     with AhcWSComponents
     with HikariCPComponents {
-  val merchantConfig = ConfigFactory.load()
   override lazy val lagomServer: LagomServer = serverFor[MerchantportallagomappService](wire[MerchantportallagomappServiceImpl])
   override lazy val jsonSerializerRegistry: JsonSerializerRegistry = MerchantportallagomappSerializerRegistry
   lazy val merchantRiskScoreDetailRepo = wire[MerchantRiskScoreDetailRepo]
@@ -46,8 +45,6 @@ abstract class MerchantportallagomappDevApplication(context: LagomApplicationCon
   lazy val merchantLoginRepo = wire[MerchantLoginRepo]
   lazy val redisUtility = wire[RedisUtility]
  wire[KafkaConsumeBusinessImpact]
-  val dbProfile = merchantConfig.getString("ifrm.db.profile")
-  lazy val dbConfig = DatabaseConfig.forConfig[JdbcProfile](dbProfile)
 }
 
 abstract class MerchantportallagomappApplication(context: LagomApplicationContext)
@@ -57,7 +54,6 @@ abstract class MerchantportallagomappApplication(context: LagomApplicationContex
     with EvolutionsComponents
     with AhcWSComponents
     with HikariCPComponents {
-  val merchantConfig = ConfigFactory.load()
   override lazy val lagomServer: LagomServer = serverFor[MerchantportallagomappService](wire[MerchantportallagomappServiceImpl])
   override lazy val jsonSerializerRegistry: JsonSerializerRegistry = MerchantportallagomappSerializerRegistry
   lazy val merchantRiskScoreDetailRepo = wire[MerchantRiskScoreDetailRepo]
@@ -67,6 +63,4 @@ abstract class MerchantportallagomappApplication(context: LagomApplicationContex
   lazy val merchantLoginRepo = wire[MerchantLoginRepo]
   lazy val redisUtility = wire[RedisUtility]
   wire[KafkaConsumeBusinessImpact]
-  val dbProfile = merchantConfig.getString("ifrm.db.profile")
-  lazy val dbConfig = DatabaseConfig.forConfig[JdbcProfile](dbProfile)
 }
