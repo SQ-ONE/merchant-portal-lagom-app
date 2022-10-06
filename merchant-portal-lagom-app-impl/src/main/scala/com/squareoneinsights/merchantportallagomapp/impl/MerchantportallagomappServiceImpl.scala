@@ -107,7 +107,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     val resp = for {
      merchant <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName))
    //  _ <- EitherT(WindowsADAuthenticator.authenticateUser(userLoginDetails.userName, userLoginDetails.password))
-     tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId,merchant.merchantName))
+     tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId ,merchant.merchantName))
       jwt <- EitherT(JwtTokenGenerator.createToken(tokenContent))
      _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
       _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId, jwt.refreshToken))
@@ -128,8 +128,8 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
 
   override def logOut: ServiceCall[LogOutReq, Done] = ServerServiceCall { req =>
    val query = for {
-      merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
-      updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(merchant.merchantName))
+      //merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
+      updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName))
       del <- EitherT(redisUtility.deleteTokenFromRedis(req.userName))
     } yield(del)
     query.value.map {
