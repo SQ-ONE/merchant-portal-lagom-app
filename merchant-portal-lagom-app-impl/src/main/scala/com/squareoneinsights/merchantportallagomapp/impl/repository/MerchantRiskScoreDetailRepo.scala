@@ -1,12 +1,13 @@
 package com.squareoneinsights.merchantportallagomapp.impl.repository
 
 import akka.Done
-import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantRiskScoreReq, RiskScoreReq}
+import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantRiskScoreReq, RiskScoreReq, RiskType}
 import org.slf4j.{Logger, LoggerFactory}
 import akka.Done
 import cats.implicits.{catsSyntaxEitherId, _}
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantRiskScoreResp
 import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantRiskScore
+
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 import slick.jdbc.PostgresProfile.api._
@@ -21,7 +22,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
   def updateRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[String, Done]] = {
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
     val update = merchantRiskScoreDetailTable.filter(_.merchantId === riskScoreReq.merchantId).map(row => (row.oldSliderPosition, row.updatedSliderPosition, row.approvalFlag, row.updateTimestamp))
-      .update(riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())
+      .update(riskScoreReq.oldRisk.toString, riskScoreReq.updatedRisk.toString, approvalFlag, LocalDateTime.now())
     //val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())
     db.run(update).map { _ =>
       Done.asRight[String]
@@ -32,7 +33,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
 
   def insertRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[String, Done]] = {
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
-    val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())
+    val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk.toString,  riskScoreReq.updatedRisk.toString, approvalFlag, LocalDateTime.now())
     db.run(insertMessage).map { _ =>
       Done.asRight[String]
     }.recover {
@@ -53,7 +54,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
     val fetchMessage = merchantRiskScoreDetailTable.filter(_.merchantId === merchantId)
     db.run(fetchMessage.result.headOption)
       .map { fromTryMerchant =>
-        Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant.merchantId, seqMerchant.oldSliderPosition, seqMerchant.updatedSliderPosition, seqMerchant.approvalFlag)), s"No merchant found for MerchantId: ${merchantId}")
+        Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant.merchantId, RiskType.withName(seqMerchant.oldSliderPosition), RiskType.withName(seqMerchant.updatedSliderPosition), seqMerchant.approvalFlag)), s"No merchant found for MerchantId: ${merchantId}")
       }
   }
 

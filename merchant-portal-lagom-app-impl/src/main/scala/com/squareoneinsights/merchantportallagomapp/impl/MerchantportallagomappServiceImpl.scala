@@ -14,7 +14,7 @@ import cats.data.EitherT
 import cats.implicits.{catsStdInstancesForFuture, catsSyntaxEitherId}
 import com.lightbend.lagom.scaladsl.api.transport.{BadRequest, ResponseHeader}
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
-import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantLoginReq, MerchantRiskScoreReq}
+import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantLoginReq, MerchantRiskScoreReq, RiskType}
 import com.squareoneinsights.merchantportallagomapp.api.response.{MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
 import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, RedisUtility, TokenContent}
@@ -70,8 +70,8 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
   def getMerchantOnboardRiskData(merchantId: String): Future[Either[String, MerchantRiskScoreResp]] = {
     val getAndUpdateQuery = for {
       onboardRiskScore <- EitherT(merchantOnboardRiskScore.getInitialRiskType(merchantId))
-      toRedis <- EitherT(merchantRiskScoreDetailRepo.insertRiskScore(MerchantRiskScoreReq.apply(merchantId, onboardRiskScore, onboardRiskScore)))
-      toKafka <- EitherT(kafkaProduceService.sendMessage(merchantId, onboardRiskScore, onboardRiskScore))
+      toRedis <- EitherT(merchantRiskScoreDetailRepo.insertRiskScore(MerchantRiskScoreReq.apply(merchantId, RiskType.withName(onboardRiskScore), RiskType.withName(onboardRiskScore))))
+      toKafka <- EitherT(kafkaProduceService.sendMessage(merchantId, RiskType.withName(onboardRiskScore), RiskType.withName(onboardRiskScore)))
     } yield(MerchantRiskScoreResp.getMerchantObj(merchantId, onboardRiskScore))
      getAndUpdateQuery.value
   }

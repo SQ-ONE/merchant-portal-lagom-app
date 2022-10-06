@@ -8,7 +8,7 @@ import akka.kafka.scaladsl.Producer
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import cats.implicits.catsSyntaxEitherId
-import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantRiskScoreProducer, RiskScoreReq}
+import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantRiskScoreProducer, RiskScoreReq, RiskType}
 import com.squareoneinsights.merchantportallagomapp.impl.common.JsonSerializer
 import com.typesafe.config.ConfigFactory
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
@@ -33,7 +33,7 @@ class KafkaProduceService {
       .withBootstrapServers(broker)
   }
 
-  def sendMessage(merchantId: String, oldRiskListType: String, updatedListType: String): Future[Either[String, Done]] = {
+  def sendMessage(merchantId: String, oldRiskListType: RiskType.Value, updatedListType: RiskType.Value): Future[Either[String, Done]] = {
     println("Inside sendMessage.......")
     val producerSet = configureKafkaProducer.createKafkaProducer()
     val riskScoreReq = MerchantRiskScoreProducer.apply(merchantId, oldRiskListType, updatedListType)
