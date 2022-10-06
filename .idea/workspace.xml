@@ -5,7 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="04fffde9-9342-40da-adba-76b8aee5ccee" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/MerchantLoginResp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/MerchantLoginResp.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappServiceImpl.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappServiceImpl.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/model/MerchantLoginActivity.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/model/MerchantLoginActivity.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantLoginRepo.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantLoginRepo.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,5 +101,16 @@
       <updated>1665051979361</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
