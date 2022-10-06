@@ -14,8 +14,8 @@ import cats.data.EitherT
 import cats.implicits.{catsStdInstancesForFuture, catsSyntaxEitherId}
 import com.lightbend.lagom.scaladsl.api.transport.{BadRequest, ResponseHeader}
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
-import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantLoginReq, MerchantRiskScoreReq, RiskType}
-import com.squareoneinsights.merchantportallagomapp.api.response.{MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
+import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, RiskType}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
 import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, RedisUtility, TokenContent}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
@@ -86,17 +86,20 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       resp.value.map {
         case Left(err) => throw new MatchError(err)
         case Right(_) => {
-          val merchantRiskResp = MerchantRiskScoreResp.apply(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk, "approve")
-          if (riskJson.updatedRisk == "High") merchantRiskResp.copy(approvalFlag = "pending") else merchantRiskResp
+          val merchantRiskResp = MerchantRiskScoreResp.apply(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk, "Approve")
+          if (riskJson.updatedRisk == "High") merchantRiskResp.copy(approvalFlag = "Pending") else merchantRiskResp
         }
       }
     }
 
-  override def getMerchantImpactData(merchantId: String): ServiceCall[NotUsed, MerchantImpactDataResp] =
+  override def getMerchantImpactData(merchantId: String): ServiceCall[NotUsed, BusinessImpact] =
     ServerServiceCall { _ =>
       businessImpactRepo.fetchBusinessDetail(merchantId).map {
         case Left(err) => throw BadRequest(s"Error: ${err}")
-        case Right(data) => MerchantImpactDataResp.setMerchantBusinessData(data)
+        case Right(data) => {
+          val x = MerchantImpactDataResp.setMerchantBusinessData(data)
+          BusinessImpact.apply(x)
+        }
       }
     }
 
@@ -107,7 +110,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
      tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId,merchant.merchantName))
       jwt <- EitherT(JwtTokenGenerator.createToken(tokenContent))
      _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
-      _ <- EitherT(addTokenToRedis(merchant.merchantId, jwt.refreshToken))
+      _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId, jwt.refreshToken))
     } yield (merchant, jwt)
     val response = resp.value.map {
         case Left(err) => throw BadRequest(s"Error: ${err}")
@@ -123,11 +126,18 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     }
   }
 
-  def addTokenToRedis(userName: String, authToken: String):
-  Future[Either[String, Done]] = Future {
-    Either.fromTry(Try(redisUtility.addToken(userName, authToken))).leftMap {
-        case ex => ex.getMessage
-      }.map(_ => Done)
+
+
+  override def logOut: ServiceCall[LogOutReq, Done] = ServerServiceCall { req =>
+   val query = for {
+      merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
+      updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(merchant.merchantName))
+      del <- EitherT(redisUtility.deleteTokenFromRedis(req.userName))
+    } yield(del)
+    query.value.map {
+      case Left(value) => throw BadRequest(s"Failed to logOut merchant: ${req.userName}")
+      case Right(resp) => resp
     }
+  }
 
 }

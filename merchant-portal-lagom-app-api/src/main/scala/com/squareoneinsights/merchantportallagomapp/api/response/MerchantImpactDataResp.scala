@@ -11,9 +11,8 @@ object MerchantImpactDataResp {
 
   def setMerchantBusinessData(consumedBusinessImpact: BusinessImpactDetail) = {
     import consumedBusinessImpact._
-    MerchantImpactDataResp(merchantId, PaymentType(lowPaymentAllowed, lowPaymentReview, lowPaymentBlocked),
+    new MerchantImpactDataResp(merchantId, PaymentType(lowPaymentAllowed, lowPaymentReview, lowPaymentBlocked),
       PaymentType(medPaymentAllowed, medPaymentReview, medPaymentBlocked), PaymentType(highPaymentAllowed, highPaymentReview, highPaymentBlocked))
-
   }
 }
 
