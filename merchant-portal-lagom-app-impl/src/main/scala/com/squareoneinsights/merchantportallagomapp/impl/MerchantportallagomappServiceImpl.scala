@@ -126,8 +126,6 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     }
   }
 
-
-
   override def logOut: ServiceCall[LogOutReq, Done] = ServerServiceCall { req =>
    val query = for {
       merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
@@ -139,5 +137,4 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       case Right(resp) => resp
     }
   }
-
 }
