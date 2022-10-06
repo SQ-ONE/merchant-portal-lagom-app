@@ -97,13 +97,13 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     val response = resp.value.map {
         case Left(err) => throw BadRequest(s"Error: ${err}")
         case Right((data,auth)) =>
-          (MerchantLoginResp(data.merchantId,data.merchantName,"merchantMcc",data.isLoggedInFlag), auth)
+          (MerchantLoginResp(data.merchantId,data.merchantName,data.merchantMcc,data.isLoggedInFlag), auth)
       }
 
     response map {
       case (res , auth) =>
       val header =  ResponseHeader.Ok.withHeader("Set-Cookie",
-          s"authToken=${auth}; Max-Age=${maxAgeInSeconds}")
+          s"authToken=${auth.authToken}; Max-Age=${maxAgeInSeconds}")
         header -> res
     }
   }
