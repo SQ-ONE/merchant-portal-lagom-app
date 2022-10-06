@@ -112,7 +112,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     val response = resp.value.map {
         case Left(err) => throw BadRequest(s"Error: ${err}")
         case Right((data,auth)) =>
-          (MerchantLoginResp(data.merchantId,data.merchantName,data.merchantMcc,data.isLoggedInFlag), auth)
+          (MerchantLoginResp(data.merchantId,data.merchantName,data.merchantMcc,true), auth)
       }
 
     response map {
