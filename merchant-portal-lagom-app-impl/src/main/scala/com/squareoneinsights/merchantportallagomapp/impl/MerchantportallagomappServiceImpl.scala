@@ -15,7 +15,7 @@ import cats.implicits.{catsStdInstancesForFuture, catsSyntaxEitherId}
 import com.lightbend.lagom.scaladsl.api.transport.{BadRequest, ResponseHeader}
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, RiskType}
-import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransaction}
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
 import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, RedisUtility, TokenContent}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
@@ -137,4 +137,8 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       case Right(resp) => resp
     }
   }
+
+  override def getTransactions(txnType: String, merchantId: String): ServiceCall[NotUsed, List[MerchantTransaction]] = ???
+
+  override def getSearchTransactions(txnType: String, merchantId: String): ServiceCall[NotUsed, List[MerchantTransaction]] = ???
 }
