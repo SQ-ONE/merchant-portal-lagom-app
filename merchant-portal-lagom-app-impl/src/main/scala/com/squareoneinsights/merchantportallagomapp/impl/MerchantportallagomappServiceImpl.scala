@@ -15,7 +15,7 @@ import cats.implicits.{catsStdInstancesForFuture, catsSyntaxEitherId}
 import com.lightbend.lagom.scaladsl.api.transport.{BadRequest, ResponseHeader}
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, RiskType}
-import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, LogoutResp, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, ResponseMessage, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
 import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, RedisUtility, TokenContent}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
@@ -59,8 +59,9 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       } yield (b)
       getMerchantRisk.value.map {
         case Left(err) => {
-          println("Inside getRiskScore Left--->" + err)
-          throw BadRequest(s"Error: ${err}")
+          val err = ResponseMessage.apply("Failed to get Business Impact")
+          throw BadRequest(err.message)
+          throw BadRequest(err.message)
         }
         case Right(data) => {
           println("Inside getRiskScore--->" + data)
@@ -97,7 +98,9 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
   override def getMerchantImpactData(merchantId: String): ServiceCall[NotUsed, BusinessImpact] =
     ServerServiceCall { _ =>
       businessImpactRepo.fetchBusinessDetail(merchantId).map {
-        case Left(err) => throw BadRequest(s"Error: ${err}")
+        case Left(err) => { val err = ResponseMessage.apply("Failed to get Business Impact")
+          throw BadRequest(err.message)
+        }
         case Right(data) => {
           val x = MerchantImpactDataResp.setMerchantBusinessData(data)
           BusinessImpact.apply(x)
@@ -128,7 +131,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     }
   }
 
-  override def logOut: ServiceCall[LogOutReq, LogoutResp] = ServerServiceCall { req =>
+  override def logOut: ServiceCall[LogOutReq, ResponseMessage] = ServerServiceCall { req =>
    val query = for {
       //merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
       updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName))
@@ -137,9 +140,9 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     query.value.map {
       case Left(err) => {
         logger.info(s"LogOut Failed. \n Error: ${err}")
-        LogoutResp.apply("Logout Failed")
+        ResponseMessage.apply("Logout Failed")
       }
-      case Right(resp) => LogoutResp.apply("Logout Successfully")
+      case Right(resp) => ResponseMessage.apply("Logout Successfully")
     }
   }
 }

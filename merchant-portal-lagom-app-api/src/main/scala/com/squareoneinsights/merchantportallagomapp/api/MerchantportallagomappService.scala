@@ -5,7 +5,7 @@ import com.lightbend.lagom.scaladsl.api.Service.restCall
 import com.lightbend.lagom.scaladsl.api.transport.Method
 import com.lightbend.lagom.scaladsl.api.{Descriptor, Service, ServiceCall}
 import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq}
-import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, LogoutResp, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, ResponseMessage, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
 import play.api.libs.json.{Format, Json}
 
 trait MerchantportallagomappService extends Service {
@@ -21,7 +21,7 @@ trait MerchantportallagomappService extends Service {
 
   def login:ServiceCall[MerchantLoginReq, MerchantLoginResp]
 
-  def logOut: ServiceCall[LogOutReq, LogoutResp]
+  def logOut: ServiceCall[LogOutReq, ResponseMessage]
 
   override final def descriptor: Descriptor = {
     import Service._
