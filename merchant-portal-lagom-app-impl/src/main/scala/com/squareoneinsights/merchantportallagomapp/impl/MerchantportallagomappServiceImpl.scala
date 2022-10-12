@@ -15,13 +15,14 @@ import cats.implicits.{catsStdInstancesForFuture, catsSyntaxEitherId}
 import com.lightbend.lagom.scaladsl.api.transport.{BadRequest, ResponseHeader}
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, RiskType}
-import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, LogoutResp, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
 import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, RedisUtility, TokenContent}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo}
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantRiskScoreDetailRepo}
 import org.joda.time.DateTime
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.Try
 
@@ -35,6 +36,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
                                        (implicit ec: ExecutionContext)
   extends MerchantportallagomappService {
 
+  val logger: Logger = LoggerFactory.getLogger(getClass)
   implicit val timeout = Timeout(5.seconds)
   val maxAgeInSeconds = 36000
   override def hello(id: String): ServiceCall[NotUsed, String] = ServiceCall {
@@ -115,7 +117,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     val response = resp.value.map {
         case Left(err) => throw BadRequest(s"Error: ${err}")
         case Right((data,auth)) =>
-          (MerchantLoginResp(data.merchantId,data.merchantName,data.merchantMcc,true), auth)
+          (MerchantLoginResp(data.merchantId, data.merchantName, data.merchantMcc,true), auth)
       }
 
     response map {
@@ -126,15 +128,18 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     }
   }
 
-  override def logOut: ServiceCall[LogOutReq, Done] = ServerServiceCall { req =>
+  override def logOut: ServiceCall[LogOutReq, LogoutResp] = ServerServiceCall { req =>
    val query = for {
       //merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
       updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName))
       del <- EitherT(redisUtility.deleteTokenFromRedis(req.userName))
     } yield(del)
     query.value.map {
-      case Left(value) => throw BadRequest(s"Failed to logOut merchant: ${req.userName}")
-      case Right(resp) => resp
+      case Left(err) => {
+        logger.info(s"LogOut Failed. \n Error: ${err}")
+        LogoutResp.apply("Logout Failed")
+      }
+      case Right(resp) => LogoutResp.apply("Logout Successfully")
     }
   }
 }
