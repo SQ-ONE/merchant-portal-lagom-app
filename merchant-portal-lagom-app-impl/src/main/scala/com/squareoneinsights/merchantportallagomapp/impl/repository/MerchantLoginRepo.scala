@@ -6,7 +6,8 @@ import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.impl.model.{Merchant, MerchantLogin, MerchantLoginActivity, MerchantLoginDetails}
 import org.joda.time.LocalDate
 
-import java.sql.Date
+import java.sql.{Date, Timestamp}
+import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -35,7 +36,7 @@ class MerchantLoginRepo(db: Database)
 
   def updateMerchantLoginInfo(merchant: MerchantLoginDetails): Future[Either[String, Done]] = {
     val action1 = merchantLoginTable.filter(_.merchantId === merchant.merchantId ).map(_.isLoggedInFlag).update(true)
-    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None,merchant.merchantId,Some(new java.sql.Date(LocalDate.now().toDate.getTime)),None)
+    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None,merchant.merchantId,Some(Timestamp.valueOf(LocalDateTime.now())),None)
 
     val addUserQuery = DBIO.seq(action1,action2).transactionally
     db.run(addUserQuery)
@@ -48,7 +49,7 @@ class MerchantLoginRepo(db: Database)
 
   def updateMerchantLoginStatus(merchantName: String): Future[Either[String, Done]] = {
     val action1 = merchantLoginTable.filter(_.merchantName === merchantName).map(_.isLoggedInFlag).update(false)
-    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantName ,Some(new java.sql.Date(LocalDate.now().toDate.getTime)),None)
+    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantName ,Some(Timestamp.valueOf(LocalDateTime.now())),None)
 
     val addUserQuery = DBIO.seq(action1, action2).transactionally
     db.run(addUserQuery)
@@ -88,9 +89,9 @@ trait MerchantLoginActivityTrait  {
 
     def merchantId = column[String]("MERCHANT_ID")
 
-    def loginTime = column[Option[Date]]("LOGIN_TIME")
+    def loginTime = column[Option[Timestamp]]("LOGIN_TIME")
 
-    def logOutTime = column[Option[Date]]("LOGOUT_TIME")
+    def logOutTime = column[Option[Timestamp]]("LOGOUT_TIME")
 
   }
 }
