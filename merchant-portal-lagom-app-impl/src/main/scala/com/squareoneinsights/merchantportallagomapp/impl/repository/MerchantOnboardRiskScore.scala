@@ -3,7 +3,8 @@ package com.squareoneinsights.merchantportallagomapp.impl.repository
 import org.slf4j.{Logger, LoggerFactory}
 import akka.Done
 import cats.implicits.{catsSyntaxEitherId, _}
-import com.squareoneinsights.merchantportallagomapp.impl.model.{MerchantOnboardRS}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{GetMerchantErr, GetMerchantOnboard, MerchantPortalError}
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantOnboardRS
 
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,11 +16,11 @@ class MerchantOnboardRiskScore (db: Database)
 
   private val merchantOnboardRiskScoreDetailTable = TableQuery[MerchantOnboardRiskScoreDetailTable]
 
-  def getInitialRiskType(merchantId: String): Future[Either[String, String]] = {
+  def getInitialRiskType(merchantId: String): Future[Either[MerchantPortalError, String]] = {
     val query = merchantOnboardRiskScoreDetailTable.filter(_.merchantId === merchantId).map(_.merchantOnboardScore)
     db.run(query.result.headOption)
       .map { fromTryMerchant =>
-        Either.fromOption(fromTryMerchant.map(seqMerchant => seqMerchant), s"No merchant found for MerchantId: ${merchantId}")
+        Either.fromOption(fromTryMerchant.map(seqMerchant => seqMerchant), GetMerchantOnboard(s"No merchant found for MerchantId: ${merchantId}"))
       }
   }
 }

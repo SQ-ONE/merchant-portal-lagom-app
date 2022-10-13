@@ -6,6 +6,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import akka.Done
 import cats.implicits.{catsSyntaxEitherId, _}
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantRiskScoreResp
+import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CheckRiskScoreExist, GetMerchantErr, MerchantPortalError, UpdatedRiskErr}
 import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantRiskScore
 
 import java.time.LocalDateTime
@@ -19,64 +20,57 @@ class MerchantRiskScoreDetailRepo(db: Database)
   private val merchantRiskScoreDetailTable = TableQuery[MerchantRiskScoreDetailTable]
 
   //val db = Database.forConfig("postgreDBProfile")
-  def updateRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[String, Done]] = {
+  def updateRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[MerchantPortalError, Done]] = {
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
     val update = merchantRiskScoreDetailTable.filter(_.merchantId === riskScoreReq.merchantId).map(row => (row.oldSliderPosition, row.updatedSliderPosition, row.approvalFlag, row.updateTimestamp))
       .update(riskScoreReq.oldRisk.toString, riskScoreReq.updatedRisk.toString, approvalFlag, LocalDateTime.now())
     //val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())
     db.run(update).map { _ =>
-      Done.asRight[String]
+      Done.asRight[MerchantPortalError]
     }.recover {
-      case ex => ex.getMessage.asLeft[Done]
+      case ex => UpdatedRiskErr(ex.getMessage).asLeft[Done]
     }
   }
 
-  def insertRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[String, Done]] = {
+  def insertRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[MerchantPortalError, Done]] = {
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
     val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk.toString,  riskScoreReq.updatedRisk.toString, approvalFlag, LocalDateTime.now())
     db.run(insertMessage).map { _ =>
-      Done.asRight[String]
+      Done.asRight[MerchantPortalError]
     }.recover {
-      case ex => ex.getMessage.asLeft[Done]
+      case ex => AddMerchantErr(ex.toString).asLeft[Done]
     }
   }
 
   def updatedIsApprovedFlag(riskScoreReq: RiskScoreReq) = {
     println("updatedIsApprovedFlag.............")
     val updatedFlag = merchantRiskScoreDetailTable.filter(_.merchantId === riskScoreReq.merchantId).map(_.approvalFlag).update(riskScoreReq.isApproved)
-    db.run(updatedFlag).map(_ => Done.asRight[String]).recover {
-      case ex => ex.getMessage.asLeft[Done]
+    db.run(updatedFlag).map(_ => Done.asRight[MerchantPortalError]).recover {
+      case ex => UpdatedRiskErr(ex.toString).asLeft[Done]
     }
   }
 
-  def fetchRiskScore(merchantId: String): Future[Either[String, MerchantRiskScoreResp]] = {
+  def fetchRiskScore(merchantId: String): Future[Either[MerchantPortalError, MerchantRiskScoreResp]] = {
     println("fetchRiskScore.............")
     val fetchMessage = merchantRiskScoreDetailTable.filter(_.merchantId === merchantId)
     db.run(fetchMessage.result.headOption)
       .map { fromTryMerchant =>
-        Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant.merchantId, RiskType.withName(seqMerchant.oldSliderPosition), RiskType.withName(seqMerchant.updatedSliderPosition), seqMerchant.approvalFlag)), s"No merchant found for MerchantId: ${merchantId}")
+        Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant.merchantId, RiskType.withName(seqMerchant.oldSliderPosition), RiskType.withName(seqMerchant.updatedSliderPosition), seqMerchant.approvalFlag)), GetMerchantErr("No merchant found for MerchantId: ${merchantId}"))
       }
   }
 
-  def checkRiskScoreExist(merchantId: String) = {
+  def checkRiskScoreExist(merchantId: String): Future[Either[MerchantPortalError, Boolean]] = {
     val containsBay = for {
       m <- merchantRiskScoreDetailTable
       if m.merchantId like s"%${merchantId}%"
     } yield m
     val bayMentioned = containsBay.exists.result
     db.run(bayMentioned)
-      .map(value => value.asRight[String]).recover {
-      case ex => ex.toString.asLeft[Boolean]
-
-
-      /*    val fetchMessage = merchantRiskScoreDetailTable.filter(_.merchantId === merchantId).exists
-    val x = fetchMessage.
-    db.run(fetchMessage.result.headOption)
-      .map { fromTryMerchant =>
-        Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant.merchantId, seqMerchant.oldSliderPosition, seqMerchant.updatedSliderPosition, seqMerchant.approvalFlag)), s"No merchant found for MerchantId: ${merchantId}")
-      }*/
+      .map(value => value.asRight[MerchantPortalError]).recover {
+      case ex => CheckRiskScoreExist(ex.toString).asLeft[Boolean]
     }
   }
+
 }
 
 trait MerchantRiskScoreDetailTrait {

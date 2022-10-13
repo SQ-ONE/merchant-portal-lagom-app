@@ -30,9 +30,9 @@ implicit val s = system
     }.map(_ => Done)
   }
 
-  def deleteTokenFromRedis(userName: String) = Future {
+  def deleteTokenFromRedis(userName: String): Future[Either[MerchantPortalError, Done.type]] = Future {
     Either.fromTry(Try(redis.del(userName))).leftMap {
-      case ex => ex.getMessage
+      case ex => LogoutRedisErr(ex.toString)
     }.map(_ => Done)
   }
 

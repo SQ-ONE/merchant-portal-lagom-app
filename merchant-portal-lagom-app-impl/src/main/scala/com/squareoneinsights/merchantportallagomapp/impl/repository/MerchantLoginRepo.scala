@@ -3,6 +3,7 @@ package com.squareoneinsights.merchantportallagomapp.impl.repository
 import akka.Done
 import slick.jdbc.PostgresProfile.api._
 import cats.syntax.either._
+import com.squareoneinsights.merchantportallagomapp.impl.common.{LogoutErr, MerchantPortalError}
 import com.squareoneinsights.merchantportallagomapp.impl.model.{Merchant, MerchantLogin, MerchantLoginActivity, MerchantLoginDetails}
 import org.joda.time.LocalDate
 
@@ -47,16 +48,16 @@ class MerchantLoginRepo(db: Database)
     }
   }
 
-  def updateMerchantLoginStatus(merchantName: String): Future[Either[String, Done]] = {
+  def updateMerchantLoginStatus(merchantName: String): Future[Either[MerchantPortalError, Done]] = {
     val action1 = merchantLoginTable.filter(_.merchantName === merchantName).map(_.isLoggedInFlag).update(false)
     val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantName ,Some(Timestamp.valueOf(LocalDateTime.now())),None)
 
     val addUserQuery = DBIO.seq(action1, action2).transactionally
     db.run(addUserQuery)
       .map { _ =>
-        Done.asRight[String]
+        Done.asRight[MerchantPortalError]
       }.recover {
-      case ex => ex.getMessage.asLeft[Done]
+      case ex => LogoutErr(ex.getMessage).asLeft[Done]
     }
   }
 
