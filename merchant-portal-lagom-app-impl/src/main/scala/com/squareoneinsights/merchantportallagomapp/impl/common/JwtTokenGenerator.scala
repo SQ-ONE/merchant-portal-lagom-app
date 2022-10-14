@@ -18,9 +18,9 @@ object JwtTokenGenerator {
 
   def createToken(content: TokenContent)(implicit format: Format[TokenContent],
                                                            ec: ExecutionContext):
-  Future[Either[String, Token]] = Future {
+  Future[Either[MerchantPortalError, Token]] = Future {
     Either.fromTry(Try(generateTokens(content))).leftMap {
-      case ex: Throwable => ex.getMessage
+      case ex: Throwable => CreateLogInTokenErr("Failed to create login token")
     }
   }
 

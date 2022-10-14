@@ -24,9 +24,9 @@ implicit val s = system
     redis.set(key, value)
 
   def addTokenToRedis(userName: String, authToken: String):
-  Future[Either[String, Done]] = Future {
+  Future[Either[MerchantPortalError, Done]] = Future {
     Either.fromTry(Try(addToken(userName, authToken))).leftMap {
-      case ex => ex.getMessage
+      case ex => LogInRedisErr("Failed to add token")
     }.map(_ => Done)
   }
 

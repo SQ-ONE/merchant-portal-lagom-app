@@ -13,5 +13,9 @@ case class AddBusinessImpactErr(err: String) extends MerchantPortalError
 case class UpdateBusinessImpactErr(err: String) extends MerchantPortalError
 case class BusinessImpactConsumerErr(err: String) extends MerchantPortalError
 case class LoginErr(err: String) extends MerchantPortalError
+case class GetUserDetailErr(err: String) extends MerchantPortalError
 case class LogoutErr(err: String) extends MerchantPortalError
 case class LogoutRedisErr(err: String) extends MerchantPortalError
+case class LogInRedisErr(err: String) extends MerchantPortalError
+case class UpdateLogInRedisErr(err: String) extends MerchantPortalError
+case class CreateLogInTokenErr(err: String) extends MerchantPortalError

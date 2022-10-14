@@ -17,7 +17,7 @@ import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, RiskType}
 import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, ResponseMessage}
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
-import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, RedisUtility, TokenContent}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, RedisUtility, TokenContent, UpdateLogInRedisErr}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo}
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantRiskScoreDetailRepo}
@@ -60,8 +60,8 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       getMerchantRisk.value.map {
         case Left(err) => {
           err match {
-            case er: GetMerchantErr => throw BadRequest(er.toString)
-            case getM: GetMerchantOnboard  => throw BadRequest(getM.toString)
+            case er: GetMerchantErr => throw BadRequest(er.err)
+            case getM: GetMerchantOnboard  => throw BadRequest(getM.err)
           }
         }
         case Right(data) => {
@@ -90,7 +90,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       resp.value.map {
         case Left(err) => {
           err match {
-            case addEr: AddMerchantErr => throw BadRequest(addEr.toString)
+            case addEr: AddMerchantErr => throw BadRequest(addEr.err)
             case er => throw new MatchError(er)
           }
         }
@@ -106,7 +106,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       businessImpactRepo.fetchBusinessDetail(merchantId).map {
         case Left(err) => {
           err match {
-            case getE: GetBusinessImpactErr => throw BadRequest(getE.toString)
+            case getE: GetBusinessImpactErr => throw BadRequest(getE.err)
           }
         }
         case Right(data) => {
@@ -126,7 +126,14 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId, jwt.refreshToken))
     } yield (merchant, jwt)
     val response = resp.value.map {
-        case Left(err) => throw BadRequest(s"Error: ${err}")
+        case Left(err) => {
+          err match {
+            case ex: LogoutRedisErr => throw BadRequest(ex.err)
+            case gErr: GetUserDetailErr => throw BadRequest(gErr.err)
+            case cErr: CreateLogInTokenErr => throw BadRequest(cErr.err)
+            case uErr: UpdateLogInRedisErr => throw BadRequest(uErr.err)
+          }
+        }
         case Right((data,auth)) =>
           (MerchantLoginResp(data.merchantId,data.merchantId,data.merchantName,data.merchantMcc,true), auth)
       }
@@ -149,8 +156,8 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       case Left(err) => {
         logger.info(s"LogOut Failed. \n Error: ${err}")
         err match {
-          case lerr: LogoutErr => throw BadRequest(lerr.toString)
-          case errl: LogoutRedisErr => throw BadRequest(errl.toString)
+          case lerr: LogoutErr => throw BadRequest(lerr.err)
+          case errl: LogoutRedisErr => throw BadRequest(errl.err)
         }
       }
       case Right(resp) => ResponseMessage.apply("Logout Successfully")
