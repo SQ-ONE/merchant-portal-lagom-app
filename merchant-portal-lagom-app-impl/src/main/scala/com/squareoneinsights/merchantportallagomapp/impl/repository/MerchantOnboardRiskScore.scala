@@ -20,7 +20,7 @@ class MerchantOnboardRiskScore (db: Database)
     val query = merchantOnboardRiskScoreDetailTable.filter(_.mcc === mcc).map(_.merchantOnboardScore)
     db.run(query.result.headOption)
       .map { fromTryMerchant =>
-        Either.fromOption(fromTryMerchant.map(seqMerchant => seqMerchant), GetMerchantOnboard(s"No merchant found for MerchantId: ${merchantId}"))
+        Either.fromOption(fromTryMerchant.map(seqMerchant => seqMerchant), GetMerchantOnboard(s"No merchant found for mcc: ${mcc}"))
       }
   }
 }
