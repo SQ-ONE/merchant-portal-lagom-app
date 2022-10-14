@@ -34,6 +34,5 @@ trait MerchantportallagomappService extends Service {
         restCall(Method.POST, "/api/v1/merchantportal/login",  login),
         restCall(Method.POST, "/api/v1/merchantportal/logout",  logOut)
       ).withAutoAcl(true)
-      .withExceptionSerializer(new CommonExceptionSerializer)
   }
 }

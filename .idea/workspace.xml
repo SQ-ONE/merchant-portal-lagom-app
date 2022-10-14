@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="18b908c4-515d-435e-878d-df22cbe37143" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/MerchantportallagomappService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/MerchantportallagomappService.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/CommonExceptionSerializer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/CommonExceptionSerializer.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,6 +34,11 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.squareoneinsights.merchantportallagomapp.api" />
+    </key>
   </component>
   <component name="RunManager">
     <configuration default="true" type="Applet" factoryName="Applet">
