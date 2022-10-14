@@ -7,9 +7,7 @@
     <list default="true" id="18b908c4-515d-435e-878d-df22cbe37143" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappServiceImpl.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappServiceImpl.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/kafka/KafkaProducerService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/kafka/KafkaProducerService.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantOnboardRiskScore.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantOnboardRiskScore.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantRiskScoreDetailRepo.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantRiskScoreDetailRepo.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

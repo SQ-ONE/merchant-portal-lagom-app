@@ -93,7 +93,6 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
             case addEr: AddMerchantErr => throw BadRequest(addEr.toString)
             case er => throw new MatchError(er)
           }
-
         }
         case Right(_) => {
           val merchantRiskResp = MerchantRiskScoreResp.apply(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk, "Approve")
