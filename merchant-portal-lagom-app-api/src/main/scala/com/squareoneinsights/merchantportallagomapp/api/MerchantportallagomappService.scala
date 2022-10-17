@@ -25,7 +25,7 @@ trait MerchantportallagomappService extends Service {
 
   def getTransactions(txnType:String, merchantId:String): ServiceCall[NotUsed, List[MerchantTransaction]]
 
-  def getSearchTransactions(txnType:String, merchantId:String): ServiceCall[NotUsed, List[MerchantTransaction]]
+  def getTransactionsBySearch(txnType:String, merchantId:String): ServiceCall[NotUsed, List[MerchantTransaction]]
 
   override final def descriptor: Descriptor = {
     import Service._
@@ -38,7 +38,7 @@ trait MerchantportallagomappService extends Service {
         restCall(Method.POST, "/api/v1/merchantportal/login",  login),
         restCall(Method.POST, "/api/v1/merchantportal/logout",  logOut),
         restCall(Method.GET, "/api/v1/merchantportal/txn/:txnType/:merchantId",  getTransactions _),
-        restCall(Method.GET, "/api/v1/merchantportal/search/:txnType/:merchantId",  getSearchTransactions _),
+        restCall(Method.GET, "/api/v1/merchantportal/search/:txnType/:merchantId",  getTransactionsBySearch _),
 
       ).withAutoAcl(true)
   }

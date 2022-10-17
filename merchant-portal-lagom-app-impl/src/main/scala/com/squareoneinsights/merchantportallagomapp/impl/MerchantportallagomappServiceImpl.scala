@@ -140,5 +140,5 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
 
   override def getTransactions(txnType: String, merchantId: String): ServiceCall[NotUsed, List[MerchantTransaction]] = ???
 
-  override def getSearchTransactions(txnType: String, merchantId: String): ServiceCall[NotUsed, List[MerchantTransaction]] = ???
+  override def getTransactionsBySearch(txnType: String, merchantId: String): ServiceCall[NotUsed, List[MerchantTransaction]] = ???
 }
