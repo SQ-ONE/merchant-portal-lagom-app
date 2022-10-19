@@ -16,13 +16,17 @@ import com.lightbend.lagom.scaladsl.api.transport.{BadRequest, ResponseHeader}
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, RiskType}
 import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
+import com.squareoneinsights.merchantportallagomapp.impl.MerchantportallagomappServiceImpl.maxAgeInSeconds
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
-import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, RedisUtility, TokenContent}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, Pac4jAuthorizer, RedisUtility, TokenContent}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo}
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantRiskScoreDetailRepo}
+import com.typesafe.config.{Config, ConfigFactory}
 import org.joda.time.DateTime
 
+import java.text.SimpleDateFormat
+import java.util.TimeZone
 import scala.util.Try
 
 class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRiskScoreDetailRepo,
@@ -33,20 +37,20 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
                                         redisUtility: RedisUtility,
                                         system: ActorSystem)
                                        (implicit ec: ExecutionContext)
-  extends MerchantportallagomappService {
+  extends  Pac4jAuthorizer(system)  with MerchantportallagomappService {
 
   implicit val timeout = Timeout(5.seconds)
-  val maxAgeInSeconds = 36000
   override def hello(id: String): ServiceCall[NotUsed, String] = ServiceCall {
     _ =>
       // Look up the sharded entity (aka the aggregate instance) for the given ID.
-     println("Fine.................")
+      println("Fine.................")
       // Ask the aggregate instance the Hello command.
-       import scala.concurrent._
+      import scala.concurrent._
       Future.successful("Ok....")
   }
 
- override def getRiskScore(merchantId: String): ServiceCall[NotUsed, MerchantRiskScoreResp] =
+  override def getRiskScore(merchantId: String): ServiceCall[NotUsed, MerchantRiskScoreResp] =
+    authorize((tokenContent, _) =>
     ServerServiceCall { _ =>
       println("Inside getRiskScore ****************************************--->")
 
@@ -65,7 +69,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
           data
         }
       }
-    }
+    })
 
   def getMerchantOnboardRiskData(merchantId: String): Future[Either[String, MerchantRiskScoreResp]] = {
     val getAndUpdateQuery = for {
@@ -73,10 +77,11 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       toRedis <- EitherT(merchantRiskScoreDetailRepo.insertRiskScore(MerchantRiskScoreReq.apply(merchantId, RiskType.withName(onboardRiskScore), RiskType.withName(onboardRiskScore))))
       toKafka <- EitherT(kafkaProduceService.sendMessage(merchantId, RiskType.withName(onboardRiskScore), RiskType.withName(onboardRiskScore)))
     } yield(MerchantRiskScoreResp.getMerchantObj(merchantId, onboardRiskScore))
-     getAndUpdateQuery.value
+    getAndUpdateQuery.value
   }
 
-   override def addRiskType: ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
+  override def addRiskType: ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
+    authorize((tokenContent, _) =>
     ServerServiceCall { riskJson =>
       val resp = for {
         toRedis <- EitherT(merchantRiskScoreDetailRepo.updateRiskScore(riskJson))
@@ -90,9 +95,10 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
           if (riskJson.updatedRisk == "High") merchantRiskResp.copy(approvalFlag = "Pending") else merchantRiskResp
         }
       }
-    }
+    })
 
   override def getMerchantImpactData(merchantId: String): ServiceCall[NotUsed, BusinessImpact] =
+    authorize((tokenContent, _) =>
     ServerServiceCall { _ =>
       businessImpactRepo.fetchBusinessDetail(merchantId).map {
         case Left(err) => throw BadRequest(s"Error: ${err}")
@@ -101,40 +107,53 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
           BusinessImpact.apply(x)
         }
       }
-    }
+    })
 
   override def login = ServerServiceCall{(requestHeader, userLoginDetails) =>
+    val tokenValidityInMinutes = 100
     val resp = for {
-     merchant <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName))
-   //  _ <- EitherT(WindowsADAuthenticator.authenticateUser(userLoginDetails.userName, userLoginDetails.password))
-     tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId ,merchant.merchantName))
-      jwt <- EitherT(JwtTokenGenerator.createToken(tokenContent))
-     _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
-      _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId, jwt.refreshToken))
+      merchant <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName))
+      //  _ <- EitherT(WindowsADAuthenticator.authenticateUser(userLoginDetails.userName, userLoginDetails.password))
+      tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId ,merchant.merchantName))
+      jwt <- EitherT(JwtTokenGenerator.createToken(tokenContent, new DateTime().plusMinutes(tokenValidityInMinutes).toDate))
+      _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
+      _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId, jwt.authToken))
+      jwtFreshToken <- EitherT(JwtTokenGenerator.generateRefreshToken(tokenContent, new DateTime().plusMinutes(tokenValidityInMinutes).toDate))
+      _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId+"_refreshToken", jwtFreshToken.refreshToken.getOrElse("")))
     } yield (merchant, jwt)
     val response = resp.value.map {
-        case Left(err) => throw BadRequest(s"Error: ${err}")
-        case Right((data,auth)) =>
-          (MerchantLoginResp(data.merchantId,data.merchantId,data.merchantName,data.merchantMcc,true), auth)
-      }
+      case Left(err) => throw BadRequest(s"Error: ${err}")
+      case Right((data,auth)) =>
+        (MerchantLoginResp(data.merchantId,data.merchantId,data.merchantName,data.merchantMcc,true), auth)
+    }
 
     response map {
       case (res , auth) =>
-      val header =  ResponseHeader.Ok.withHeader("Set-Cookie",
+        val header =  ResponseHeader.Ok.withHeader("Set-Cookie",
           s"authToken=${auth.authToken}; Max-Age=${maxAgeInSeconds}")
         header -> res
     }
   }
 
-  override def logOut: ServiceCall[LogOutReq, Done] = ServerServiceCall { req =>
-   val query = for {
+  override def logOut: ServiceCall[LogOutReq, Done] =
+    authorize((tokenContent, _) =>
+    ServerServiceCall { req =>
+    val query = for {
       //merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
       updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName))
       del <- EitherT(redisUtility.deleteTokenFromRedis(req.userName))
+      delR <- EitherT(redisUtility.deleteTokenFromRedis(req.userName+"_refreshToken"))
     } yield(del)
     query.value.map {
       case Left(value) => throw BadRequest(s"Failed to logOut merchant: ${req.userName}")
       case Right(resp) => resp
     }
-  }
+  })
+}
+
+
+
+object MerchantportallagomappServiceImpl{
+  val config: Config = ConfigFactory.load()
+  val maxAgeInSeconds: Int = config.getInt("ifrm.cookie.max-age.seconds")
 }
