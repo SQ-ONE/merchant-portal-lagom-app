@@ -29,17 +29,16 @@ implicit val s = system
   def getToken(token: String) = {
     redis.get(token).map(x => x.map(_.utf8String))
   }
-
-  def deleteTokenFromRedis(userName: String) = Future {
-    Either.fromTry(Try(redis.del(userName))).leftMap {
-      case ex => ex.getMessage
-    }.map(_ => Done)
-  }
-
   def addTokenToRedis(userName: String, authToken: String):
-  Future[Either[String, Done]] = Future {
+  Future[Either[MerchantPortalError, Done]] = Future {
     Either.fromTry(Try(addToken(userName, authToken))).leftMap {
-      case ex => ex.getMessage
+      case ex => LogInRedisErr("Failed to add token")
+    }.map(_ => Done)
+ }
+
+  def deleteTokenFromRedis(userName: String): Future[Either[MerchantPortalError, Done.type]] = Future {
+    Either.fromTry(Try(redis.del(userName))).leftMap {
+      case ex => LogoutRedisErr(ex.toString)
     }.map(_ => Done)
   }
 
