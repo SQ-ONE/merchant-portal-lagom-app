@@ -6,6 +6,7 @@ import com.lightbend.lagom.scaladsl.api.transport.Method
 import com.lightbend.lagom.scaladsl.api.{Descriptor, Service, ServiceCall}
 import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq}
 import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransaction}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, ResponseMessage}
 import play.api.libs.json.{Format, Json}
 
 trait MerchantportallagomappService extends Service {
@@ -21,7 +22,7 @@ trait MerchantportallagomappService extends Service {
 
   def login:ServiceCall[MerchantLoginReq, MerchantLoginResp]
 
-  def logOut: ServiceCall[LogOutReq, Done]
+  def logOut: ServiceCall[LogOutReq, ResponseMessage]
 
   def getTransactions(txnType:String, merchantId:String): ServiceCall[NotUsed, List[MerchantTransaction]]
 
@@ -41,5 +42,6 @@ trait MerchantportallagomappService extends Service {
         restCall(Method.GET, "/api/v1/merchantportal/search/:txnType/:merchantId",  getTransactionsBySearch _),
 
       ).withAutoAcl(true)
+      .withExceptionSerializer(new CommonExceptionSerializer)
   }
 }
