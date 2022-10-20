@@ -48,6 +48,15 @@ class MerchantLoginRepo(db: Database)
     }
   }
 
+  def logoutActivity(merchantId: String): Future[Either[MerchantPortalError, Done]] = {
+    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantId, None, Some(Timestamp.valueOf(LocalDateTime.now())))
+    db.run(action2)
+      .map { _ =>
+        Done.asRight[MerchantPortalError]
+      }.recover {
+      case ex => LogoutErr(ex.getMessage).asLeft[Done]
+    }
+  }
   def updateMerchantLoginStatus(merchantName: String): Future[Either[MerchantPortalError, Done]] = {
     val action1 = merchantLoginTable.filter(_.merchantName === merchantName).map(_.isLoggedInFlag).update(false)
     val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantName ,Some(Timestamp.valueOf(LocalDateTime.now())),None)

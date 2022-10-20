@@ -148,9 +148,11 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
 
   override def logOut: ServiceCall[LogOutReq, ResponseMessage] = ServerServiceCall { req =>
    val query = for {
-      //merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
+      merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName))
       updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName))
       del <- EitherT(redisUtility.deleteTokenFromRedis(req.userName))
+      _<- EitherT(merchantLoginRepo.logoutActivity(merchant.merchantId))
+
     } yield(del)
     query.value.map {
       case Left(err) => {
@@ -160,7 +162,9 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
           case errl: LogoutRedisErr => throw BadRequest(errl.err)
         }
       }
-      case Right(resp) => ResponseMessage.apply("Logout Successfully")
+      case Right(resp) => {
+        ResponseMessage.apply("Logout Successfully")
+      }
     }
   }
 }
