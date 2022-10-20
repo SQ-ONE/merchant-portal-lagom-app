@@ -66,47 +66,13 @@ class Pac4jAuthorizer(system: ActorSystem) extends SecuredService {
         val userId = profile.getAttribute("merchantId").asInstanceOf[String]
         val username = profile.getId
         val tokenInRedisF = redis.getToken(userId)
-        val z = tokenInRedisF.flatMap { tokenInRedis =>
+        val z = tokenInRedisF.map { tokenInRedis =>
           val tokenInRequest = extractTokenHeader(req)
           tokenInRedis.filter(_ == tokenInRequest)
             .fold {
-              redis.getToken(username + "_refreshToken").flatMap {
-                case Some(refreshTokenValue) =>
-                  val result = getUserDetailFromToken(refreshTokenValue)
-                  if (result._3) {
-                    val tokenParam = TokenContent(userId, username)
-                    JwtTokenGenerator.createToken(tokenParam,result._1).map {
-                      case Left(value) => throw Forbidden("Failed to create new token:"+value)
-                      case Right(tokenValue) =>
-                        redis.addToken(username, tokenValue.authToken)
-                        val authorizedServiceCall = serviceCall(TokenContent(userId, username, isRefreshToken = true), tokenValue.authToken)
-                        ServerServiceCall {
-                          (reqHeader, req: Request) =>
-                            addHeader(authorizedServiceCall.invokeWithHeaders(reqHeader, req).map(p => p._2), tokenValue.authToken)
-                        }
-                    }
-                  } else
-                    throw BadRequest("Session expired. Please login again..")
-                case None => throw Forbidden("Session expired. Please login again..")
-              }
-            } {
-              _ => {
-                val q = redis.getToken(username + "_refreshToken").map {
-                  case Some(refreshTokenValue) =>
-                    if (getUserDetailFromToken(refreshTokenValue)._3){
-                      val authorizedServiceCall = serviceCall(TokenContent(userId, username,isRefreshToken = true), tokenInRedis.getOrElse(""))
-                      ServerServiceCall {
-                        (reqHeader, req: Request) =>
-                          addHeader(authorizedServiceCall.invokeWithHeaders(reqHeader, req).map(p => p._2), tokenInRedis.getOrElse(""))
-                      }
-                    }
-                    else {
-                      throw BadRequest("Session expired. Please login again...")
-                    }
-                  case None => throw Forbidden("Session expired. Please login again...")
-                }
-                q
-              }
+              throw Forbidden("Session expired. Please login again..")
+            } { l =>
+              serviceCall(TokenContent(userId, username), tokenInRequest)
             }
         }
         z

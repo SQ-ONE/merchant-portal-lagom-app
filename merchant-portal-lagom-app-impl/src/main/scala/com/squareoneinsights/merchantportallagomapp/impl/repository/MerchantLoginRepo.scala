@@ -59,9 +59,9 @@ class MerchantLoginRepo(db: Database)
   }
   def updateMerchantLoginStatus(merchantName: String): Future[Either[MerchantPortalError, Done]] = {
     val action1 = merchantLoginTable.filter(_.merchantName === merchantName).map(_.isLoggedInFlag).update(false)
-    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantName ,Some(Timestamp.valueOf(LocalDateTime.now())),None)
+    //val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantName ,Some(Timestamp.valueOf(LocalDateTime.now())),None)
 
-    val addUserQuery = DBIO.seq(action1, action2).transactionally
+    val addUserQuery = DBIO.seq(action1).transactionally
     db.run(addUserQuery)
       .map { _ =>
         Done.asRight[MerchantPortalError]
