@@ -3,7 +3,7 @@ package com.squareoneinsights.merchantportallagomapp.impl.repository
 import akka.Done
 import slick.jdbc.PostgresProfile.api._
 import cats.syntax.either._
-import com.squareoneinsights.merchantportallagomapp.impl.common.{GetUserDetailErr, LogoutErr, MerchantPortalError, UpdateLogInRedisErr}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{GetUserDetailErr, LogoutErr, MerchantPortalError, UpdateLogInPsqlErr, UpdateLogInRedisErr}
 import com.squareoneinsights.merchantportallagomapp.impl.model.{Merchant, MerchantLogin, MerchantLoginActivity, MerchantLoginDetails}
 import org.joda.time.LocalDate
 
@@ -44,7 +44,7 @@ class MerchantLoginRepo(db: Database)
       .map { _ =>
         Done.asRight[UpdateLogInRedisErr]
       }.recover {
-      case ex => UpdateLogInRedisErr("Failed to updated login detail").asLeft[Done]
+      case ex => UpdateLogInPsqlErr("Failed to updated login detail").asLeft[Done]
     }
   }
 

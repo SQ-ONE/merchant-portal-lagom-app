@@ -2,9 +2,55 @@ package com.squareoneinsights.merchantportallagomapp.impl.repository
 
 import slick.jdbc.PostgresProfile.api._
 import cats.syntax.either._
+import com.squareoneinsights.merchantportallagomapp.impl.common.{MerchantPortalError, MerchantTxnErr}
+import slick.jdbc.GetResult
 
-class MerchantTransactionRepo {
+import scala.annotation.tailrec
+import scala.concurrent.{ExecutionContext, Future}
 
+case class FilterTXN(key:String, condition:String, value:String)
+
+class MerchantTransactionRepo(db: Database)
+                             (implicit ec: ExecutionContext) extends MerchantTransactionTrait with MerchantTransactionLogTrait {
+
+  val merchantTransactionTable = TableQuery[MerchantTransactionTable]
+  val merchantTransactionLogTable = TableQuery[MerchantTransactionLogTable]
+
+
+  def getTransactionsByType(merchantId: String, txnType: String): Future[Either[MerchantPortalError, Seq[MerchantTransaction]]] = {
+    val query = merchantTransactionTable.filter(m => m.merchantId === merchantId && m.txnType === txnType)
+      .result.asTry.map { merchantWithTry =>
+      Either.fromTry(merchantWithTry).leftMap(err => MerchantTxnErr(err.getMessage))
+    }
+    db.run(query)
+  }
+
+   def tailRecFilter(flt: List[FilterTXN]): String = {
+     @tailrec
+   def supportFilter(f: List[FilterTXN], acc:String): String = {
+  if (f.isEmpty) acc else {
+    supportFilter(f.tail, acc.concat(s"""AND "${f.head.key}" ${f.head.condition} '${f.head.value}' """))
+  }
+}
+     supportFilter(flt, "")
+  }
+
+
+
+  implicit val getSupplierResult = GetResult(r => MerchantTransaction(r.nextString, r.nextString, r.nextString,
+    r.nextString, r.nextInt, r.nextString, r.nextString, r.nextString, r.nextString, r.nextString, r.nextString, r.nextString, r.nextString, r.nextString, r.nextString, r.nextString, r.nextString))
+
+  def getTransactionsBySearch(merchantId: String, txnType: String, flt:List[FilterTXN]): Future[Either[MerchantPortalError, Seq[MerchantTransaction]]] = {
+
+    val sql = sql""" select * from "IFRM_LIST_LIMITS"."MERCHANT_TRANSACTION_LOG" where
+                     "MERCHANT_ID" = $merchantId AND "TXNTYPE" = $txnType ${tailRecFilter(flt)}
+         """.as[MerchantTransaction]
+
+    val resp =sql.asTry.map { merchantWithTry =>
+      Either.fromTry(merchantWithTry).leftMap(err => MerchantTxnErr(err.getMessage))
+    }
+    db.run(resp)
+  }
 }
 
 trait MerchantTransactionLogTrait {
@@ -41,7 +87,7 @@ trait MerchantTransactionTrait  {
 
     def txnTimestamp = column[String]("TXN_TIMESTAMP")
 
-    def txnAmount = column[String]("TXN_AMOUNT")
+    def txnAmount = column[Int]("TXN_AMOUNT")
 
     def ifrmVerdict = column[String]("IFRM_VERDICT")
 
@@ -75,7 +121,7 @@ case class MerchantTransaction(
                                txnId:String,
                                caseRefNo:String,
                                txnTimestamp:String,
-                               txnAmount:String,
+                               txnAmount:Int,
                                ifrmVerdict:String,
                                investigationStatus:String,
                                channel:String,
@@ -92,9 +138,3 @@ case class MerchantTransaction(
 
 case class MerchantTransactionLog(id:Int, txnId:String, logName:String, logValue:String)
 
-/*
-"ID" serial4 NOT NULL,
-"TXN_ID" VARCHAR(50)  NOT NULL,
-"LOG_NAME"  VARCHAR(50) NULL,
-"LOG_VALUE" VARCHAR(500) NULL
-*/

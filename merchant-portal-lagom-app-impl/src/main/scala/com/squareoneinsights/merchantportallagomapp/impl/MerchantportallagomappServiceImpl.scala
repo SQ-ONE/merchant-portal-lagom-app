@@ -17,12 +17,10 @@ import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, RiskType}
 import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransaction}
 import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, ResponseMessage}
-
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
-import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, RedisUtility, TokenContent, UpdateLogInRedisErr}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, MerchantTxnErr, RedisUtility, TokenContent, UpdateLogInRedisErr}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
-import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo}
-import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantRiskScoreDetailRepo}
+import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo, MerchantTransactionRepo}
 import org.joda.time.DateTime
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -33,6 +31,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
                                         merchantOnboardRiskScore: MerchantOnboardRiskScore,
                                         businessImpactRepo: BusinessImpactRepo,
                                         merchantLoginRepo:MerchantLoginRepo,
+                                        merchantTransactionRepo:MerchantTransactionRepo,
                                         redisUtility: RedisUtility,
                                         system: ActorSystem)
                                        (implicit ec: ExecutionContext)
@@ -166,7 +165,28 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
     }
   }
 
-  override def getTransactions(txnType: String, merchantId: String): ServiceCall[NotUsed, List[MerchantTransaction]] = ???
+  override def getTransactions(txnType: String, merchantId: String): ServiceCall[NotUsed, List[MerchantTransaction]] =  ServerServiceCall { req =>
+
+    val resp = for {
+      merchant <- EitherT(merchantTransactionRepo.getTransactionsByType(merchantId, txnType))
+    } yield merchant
+      resp.value.map {
+      case Left(err) =>
+        err match {
+          case ex: MerchantTxnErr => throw BadRequest(ex.err)
+        }
+      case Right((data)) =>
+        data.map{m => MerchantTransaction(m.txnId,
+          m.caseRefNo,
+          m.txnTimestamp,
+          m.txnAmount,
+          m.ifrmVerdict,
+          m.investigationStatus,
+          m.channel,
+          m.txnType,
+          m.responseCode)}.toList
+    }
+  }
 
   override def getTransactionsBySearch(txnType: String, merchantId: String): ServiceCall[NotUsed, List[MerchantTransaction]] = ???
 }
