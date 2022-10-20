@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2884a22e-bf4d-4f98-9a4c-0e16fc27fb51" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/MerchantportallagomappService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/MerchantportallagomappService.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappServiceImpl.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappServiceImpl.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantLoginRepo.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantLoginRepo.scala" afterDir="false" />
-    </list>
+    <list default="true" id="2884a22e-bf4d-4f98-9a4c-0e16fc27fb51" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
