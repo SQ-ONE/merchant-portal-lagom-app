@@ -70,7 +70,6 @@ class MerchantRiskScoreDetailRepo(db: Database)
       case ex => CheckRiskScoreExist(ex.toString).asLeft[Boolean]
     }
   }
-
 }
 
 trait MerchantRiskScoreDetailTrait {
@@ -80,6 +79,8 @@ trait MerchantRiskScoreDetailTrait {
     def * = (requestId, merchantId, oldSliderPosition, updatedSliderPosition, approvalFlag, updateTimestamp) <> ((MerchantRiskScore.apply _).tupled, MerchantRiskScore.unapply)
 
     def requestId = column[Int]("REQUEST_ID", O.AutoInc, O.Unique)
+
+    def partnerId = column[Int]("PARTNER_ID")
 
     def merchantId = column[String]("MERCHANT_ID")
 
