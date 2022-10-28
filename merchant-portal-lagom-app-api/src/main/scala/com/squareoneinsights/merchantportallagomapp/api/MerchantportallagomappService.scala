@@ -15,7 +15,8 @@ import com.squareoneinsights.merchantportallagomapp.api.response.{
   MerchantLoginResp,
   MerchantRiskScoreResp,
   MerchantTransaction,
-  MerchantTxnSearchCriteria
+  MerchantTxnSearchCriteria,
+  MerchantTransactionDetails
 }
 import play.api.libs.json.{Format, Json}
 
@@ -48,6 +49,12 @@ trait MerchantportallagomappService extends Service {
   ): ServiceCall[NotUsed, List[MerchantTransaction]]
 
   def getTxnSearchCriteriaList: ServiceCall[NotUsed, MerchantTxnSearchCriteria]
+
+  def getTxnDetails(
+      txnType: String,
+      txnId: String,
+      merchantId: String
+  ): ServiceCall[NotUsed, MerchantTransactionDetails]
 
   override final def descriptor: Descriptor = {
     import Service._
@@ -85,6 +92,11 @@ trait MerchantportallagomappService extends Service {
           Method.GET,
           "/api/v1/merchantportal/search/list",
           getTxnSearchCriteriaList
+        ),
+        restCall(
+          Method.GET,
+          "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId",
+          getTxnDetails _
         )
       )
       .withAutoAcl(true)

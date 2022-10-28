@@ -27,7 +27,12 @@ import com.squareoneinsights.merchantportallagomapp.api.response.{
   MerchantRiskScoreResp,
   MerchantTransaction,
   MerchantTxnSearchCriteria,
-  TxnSearchCriteriaResult
+  TxnSearchCriteriaResult,
+  CaseDetails,
+  CaseLogDetails,
+  Logs,
+  TxnDetails,
+  MerchantTransactionDetails
 }
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
 import com.squareoneinsights.merchantportallagomapp.impl.common.{
@@ -44,6 +49,7 @@ import com.squareoneinsights.merchantportallagomapp.impl.repository.{
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{
   BusinessImpactRepo,
   MerchantLoginRepo,
+  MerchantTransactionRepo,
   MerchantRiskScoreDetailRepo
 }
 import org.joda.time.DateTime
@@ -56,6 +62,7 @@ class MerchantportallagomappServiceImpl(
     merchantOnboardRiskScore: MerchantOnboardRiskScore,
     businessImpactRepo: BusinessImpactRepo,
     merchantLoginRepo: MerchantLoginRepo,
+    merchantTransactionRepo: MerchantTransactionRepo,
     redisUtility: RedisUtility,
     system: ActorSystem
 )(implicit ec: ExecutionContext)
@@ -254,5 +261,18 @@ class MerchantportallagomappServiceImpl(
         )
       )
     }
+
+  override def getTxnDetails(
+      txnType: String,
+      txnId: String,
+      merchantId: String
+  ): ServiceCall[NotUsed, MerchantTransactionDetails] = ServerServiceCall { _ =>
+    merchantTransactionRepo
+      .getTransactionDetails(txnType, txnId, merchantId)
+      .map {
+        case Left(err)   => throw BadRequest(s"Error: ${err}")
+        case Right(data) => data
+      }
+  }
 
 }
