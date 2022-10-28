@@ -45,7 +45,7 @@ val kafkaClient =  "org.apache.kafka" % "kafka-clients" % "0.10.0.0"
 //val debeziumApi = "io.debezium" % "debezium-api" % "1.9.5.Final"
 //val debeziumDep = "io.debezium" % "debezium-connector-postgres" % "1.9.5.Final"
 //val debeziumEmb = "io.debezium" % "debezium-embedded" % "1.9.5.Final"
-
+val playJsonDerivedCodecs = "org.julienrf" %% "play-json-derived-codecs" % "4.0.0"
 
 
 
@@ -92,7 +92,8 @@ lazy val `merchant-portal-lagom-app-impl` = (project in file("merchant-portal-la
       akkaDiscoveryKubernetesApi,
       jwt,
       pac4jJwt,
-      nimbusJoseJwt
+      nimbusJoseJwt,
+      playJsonDerivedCodecs
     )
   )
   .settings(lagomForkedTestSettings)

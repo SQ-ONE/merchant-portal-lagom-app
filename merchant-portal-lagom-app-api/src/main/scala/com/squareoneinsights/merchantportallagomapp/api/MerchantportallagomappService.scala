@@ -4,8 +4,8 @@ import akka.{Done, NotUsed}
 import com.lightbend.lagom.scaladsl.api.Service.restCall
 import com.lightbend.lagom.scaladsl.api.transport.Method
 import com.lightbend.lagom.scaladsl.api.{Descriptor, Service, ServiceCall}
-import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq}
-import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransaction}
+import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, TransactionFilterReq}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransactionResp}
 import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, ResponseMessage}
 import play.api.libs.json.{Format, Json}
 
@@ -24,9 +24,9 @@ trait MerchantportallagomappService extends Service {
 
   def logOut: ServiceCall[LogOutReq, ResponseMessage]
 
-  def getTransactions(txnType:String, merchantId:String): ServiceCall[NotUsed, List[MerchantTransaction]]
+  def getTransactions(txnType:String, merchantId:String): ServiceCall[NotUsed, List[MerchantTransactionResp]]
 
-  def getTransactionsBySearch(txnType:String, merchantId:String): ServiceCall[NotUsed, List[MerchantTransaction]]
+  def getTransactionsBySearch(txnType:String, merchantId:String): ServiceCall[TransactionFilterReq, List[MerchantTransactionResp]]
 
   override final def descriptor: Descriptor = {
     import Service._
@@ -39,7 +39,7 @@ trait MerchantportallagomappService extends Service {
         restCall(Method.POST, "/api/v1/merchantportal/login",  login),
         restCall(Method.POST, "/api/v1/merchantportal/logout",  logOut),
         restCall(Method.GET, "/api/v1/merchantportal/txn/:txnType/:merchantId",  getTransactions _),
-        restCall(Method.GET, "/api/v1/merchantportal/search/:txnType/:merchantId",  getTransactionsBySearch _),
+        restCall(Method.POST, "/api/v1/merchantportal/search/:txnType/:merchantId",  getTransactionsBySearch _),
 
       ).withAutoAcl(true)
       .withExceptionSerializer(new CommonExceptionSerializer)

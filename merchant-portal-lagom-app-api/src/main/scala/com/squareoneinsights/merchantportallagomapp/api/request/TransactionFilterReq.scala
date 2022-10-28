@@ -4,7 +4,7 @@ import play.api.libs.json.{Format, Json}
 
 case class TransactionFilterReq(filterCondition:List[TransactionFilter])
 
-case class TransactionFilter(key:String,condition:String,values:List[String])
+case class TransactionFilter(key:String,condition:String,value:String)
 
 object TransactionFilterReq {
 
