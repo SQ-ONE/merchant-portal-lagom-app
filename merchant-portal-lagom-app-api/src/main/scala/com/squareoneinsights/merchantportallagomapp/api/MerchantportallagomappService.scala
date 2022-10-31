@@ -42,6 +42,5 @@ trait MerchantportallagomappService extends Service {
         restCall(Method.POST, "/api/v1/merchantportal/search/:txnType/:merchantId",  getTransactionsBySearch _),
 
       ).withAutoAcl(true)
-      .withExceptionSerializer(new CommonExceptionSerializer)
   }
 }

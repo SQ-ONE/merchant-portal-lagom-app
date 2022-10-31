@@ -17,18 +17,24 @@ implicit val s = system
   val config = ConfigFactory.load()
   val redisHost = config.getString("ifrm.redis.host")
   val redisAuth = config.getString("ifrm.redis.password")
+  val tokenTtl = ConfigFactory.load().getLong("ifrm.auth.token.redis.ttl")
 
   val redis: RedisClient = RedisClient(redisHost, password = Some(redisAuth))
 
-  def addToken(key: String, value: String) =
-    redis.set(key, value)
 
+  def addToken(key: String, value: String) =
+    redis.set(key, value,Some(tokenTtl))
+
+
+  def getToken(token: String) = {
+    redis.get(token).map(x => x.map(_.utf8String))
+  }
   def addTokenToRedis(userName: String, authToken: String):
   Future[Either[MerchantPortalError, Done]] = Future {
     Either.fromTry(Try(addToken(userName, authToken))).leftMap {
       case ex => LogInRedisErr("Failed to add token")
     }.map(_ => Done)
-  }
+ }
 
   def deleteTokenFromRedis(userName: String): Future[Either[MerchantPortalError, Done.type]] = Future {
     Either.fromTry(Try(redis.del(userName))).leftMap {
