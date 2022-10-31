@@ -1,12 +1,13 @@
 package com.squareoneinsights.merchantportallagomapp.api.response
 
 import play.api.libs.json.{Format, Json}
+import java.sql.Timestamp
 
 case class TxnDetails(
     channel: String,
     customerId: String,
     txnId: String,
-    txnAmount: String,
+    txnAmount: Double,
     txnTimestamp: String,
     ifrmVerdict: String,
     instrument: String,
@@ -16,5 +17,3 @@ case class TxnDetails(
 object TxnDetails {
   implicit val format: Format[TxnDetails] = Json.format
 }
-
-

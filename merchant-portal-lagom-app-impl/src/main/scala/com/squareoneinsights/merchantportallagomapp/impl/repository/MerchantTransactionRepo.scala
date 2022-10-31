@@ -1,6 +1,8 @@
 package com.squareoneinsights.merchantportallagomapp.impl.repository
 
 import slick.jdbc.PostgresProfile.api._
+import java.sql.Timestamp
+import scala.annotation.tailrec
 import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.api.response.{
   MerchantTransactionDetails,
@@ -29,7 +31,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
       .filter(_.txnId === txnId)
       .filter(_.txnType === txnType)
       .join(merchantTransactionLog)
-      .on(_.merchantId === _.id)
+      .on(_.txnId === _.txnId)
       .result
       .asTry
       .map { txnWithTry =>
@@ -48,7 +50,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
               x._1.customerId,
               x._1.txnId,
               x._1.txnAmount,
-              x._1.txnTimestamp,
+              x._1.txnTimestamp.toString,
               x._1.ifrmVerdict,
               x._1.instrument,
               x._1.location
@@ -59,7 +61,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
               x._1.violationDetails,
               x._1.txnId,
               x._1.txnAmount,
-              x._1.txnTimestamp,
+              x._1.txnTimestamp.toString,
               x._1.investigatorComment,
               x._1.caseId: String
             )
@@ -92,7 +94,7 @@ trait MerchantTransactionLogTrait {
       logValue
     ) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
 
-    def id = column[String]("ID")
+    def id = column[Int]("ID")
 
     def txnId = column[String]("TXN_ID")
 
@@ -138,9 +140,9 @@ trait MerchantTransactionTrait {
 
     def caseRefNo = column[String]("CASE_REF_NO")
 
-    def txnTimestamp = column[String]("TXN_TIMESTAMP")
+    def txnTimestamp = column[Timestamp]("TXN_TIMESTAMP")
 
-    def txnAmount = column[String]("TXN_AMOUNT")
+    def txnAmount = column[Double]("TXN_AMOUNT")
 
     def ifrmVerdict = column[String]("IFRM_VERDICT")
 
@@ -173,8 +175,8 @@ case class MerchantTransaction(
     merchantId: String,
     txnId: String,
     caseRefNo: String,
-    txnTimestamp: String,
-    txnAmount: String,
+    txnTimestamp: Timestamp,
+    txnAmount: Double,
     ifrmVerdict: String,
     investigationStatus: String,
     channel: String,
@@ -190,7 +192,7 @@ case class MerchantTransaction(
 )
 
 case class MerchantTransactionLog(
-    id: String,
+    id: Int,
     txnId: String,
     logName: String,
     logValue: String
