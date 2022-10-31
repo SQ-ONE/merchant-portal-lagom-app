@@ -250,7 +250,8 @@ class MerchantportallagomappServiceImpl(
 
   override def getTransactions(
       txnType: String,
-      merchantId: String
+      merchantId: String,
+      partnerId: Int
   ): ServiceCall[NotUsed, List[MerchantTransactionResp]] =
     authorize((tokenContent, _) =>
       ServerServiceCall { req =>
@@ -282,13 +283,14 @@ class MerchantportallagomappServiceImpl(
 
   override def getTransactionsBySearch(
       txnType: String,
-      merchantId: String
+      merchantId: String,
+      partnerId: Int
   ): ServiceCall[TransactionFilterReq, List[MerchantTransactionResp]] =
     authorize((tokenContent, _) =>
       ServerServiceCall { req =>
         val request = req.filterCondition.map(x => FilterTXN(x.key, MerchantUtil.conditionMap(x.condition), x.value))
         val resp = for {
-          merchant <- EitherT(merchantTransactionRepo.getTransactionsBySearch(merchantId, txnType, request))
+          merchant <- EitherT(merchantTransactionRepo.getTransactionsBySearch(merchantId, txnType, request, partnerId))
         } yield merchant
         resp.value.map {
           case Left(err) =>
@@ -332,10 +334,11 @@ class MerchantportallagomappServiceImpl(
   override def getTxnDetails(
       txnType: String,
       txnId: String,
-      merchantId: String
+      merchantId: String,
+      partnerId: Int
   ): ServiceCall[NotUsed, MerchantTransactionDetails] = ServerServiceCall { _ =>
     merchantTransactionRepo
-      .getTransactionDetails(txnType, txnId, merchantId)
+      .getTransactionDetails(txnType, txnId, merchantId, partnerId)
       .map {
         case Left(err)   => throw BadRequest(s"Error: ${err}")
         case Right(data) => data

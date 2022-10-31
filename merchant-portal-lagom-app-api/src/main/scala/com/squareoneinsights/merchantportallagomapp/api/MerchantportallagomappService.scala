@@ -40,11 +40,12 @@ trait MerchantportallagomappService extends Service {
 
   def logOut: ServiceCall[LogOutReq, ResponseMessage]
 
-  def getTransactions(txnType: String, merchantId: String): ServiceCall[NotUsed, List[MerchantTransactionResp]]
+  def getTransactions(txnType: String, merchantId: String, partnerId: Int): ServiceCall[NotUsed, List[MerchantTransactionResp]]
 
   def getTransactionsBySearch(
       txnType: String,
-      merchantId: String
+      merchantId: String,
+      partnerId: Int
   ): ServiceCall[TransactionFilterReq, List[MerchantTransactionResp]]
 
   def getTxnSearchCriteriaList: ServiceCall[NotUsed, MerchantTxnSearchCriteria]
@@ -52,7 +53,8 @@ trait MerchantportallagomappService extends Service {
   def getTxnDetails(
       txnType: String,
       txnId: String,
-      merchantId: String
+      merchantId: String,
+      partnerId: Int
   ): ServiceCall[NotUsed, MerchantTransactionDetails]
 
   final override def descriptor: Descriptor = {
@@ -69,8 +71,8 @@ trait MerchantportallagomappService extends Service {
         ),
         restCall(Method.POST, "/api/v1/merchantportal/login", login),
         restCall(Method.POST, "/api/v1/merchantportal/logout", logOut),
-        restCall(Method.GET, "/api/v1/merchantportal/txn/:txnType/:merchantId", getTransactions _),
-        restCall(Method.POST, "/api/v1/merchantportal/search/:txnType/:merchantId", getTransactionsBySearch _),
+        restCall(Method.GET, "/api/v1/merchantportal/txn/:txnType/:merchantId/:partnerId", getTransactions _),
+        restCall(Method.POST, "/api/v1/merchantportal/search/:txnType/:merchantId/:partnerId", getTransactionsBySearch _),
         restCall(
           Method.GET,
           "/api/v1/merchantportal/search/list",

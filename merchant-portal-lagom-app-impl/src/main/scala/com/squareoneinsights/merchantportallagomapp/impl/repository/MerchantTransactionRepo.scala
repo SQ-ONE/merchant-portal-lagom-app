@@ -82,13 +82,14 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   def getTransactionsBySearch(
       merchantId: String,
       txnType: String,
-      flt: List[FilterTXN]
+      flt: List[FilterTXN],
+      partnerId: Int
   ): Future[Either[MerchantPortalError, Seq[MerchantTransactionResp]]] = {
 
     val sql = sql""" SELECT "TXN_ID","CASE_REF_NO","TXN_TIMESTAMP","TXN_AMOUNT","IFRM_VERDICT", "INVESTIGATION_STATUS",
                      "CHANNEL","TXN_TYPE","RESPONSE_CODE"
                    FROM "IFRM_LIST_LIMITS"."MERCHANT_TRANSACTION_DETAILS" WHERE
-                     "MERCHANT_ID" = '#$merchantId' AND "TXN_TYPE" = '#$txnType' #${tailRecFilter(flt)}
+                     "MERCHANT_ID" = '#$merchantId' AND "TXN_TYPE" = '#$txnType' #${tailRecFilter(flt)} AND "PARTNER_ID" = '$partnerId'
                      ORDER BY "TXN_TIMESTAMP" DESC
          """.as[MerchantTransactionResp]
 
@@ -101,12 +102,13 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   def getTransactionDetails(
       txnType: String,
       txnId: String,
-      merchantId: String
+      merchantId: String,
+      partnerId: Int
   ): Future[Either[String, MerchantTransactionDetails]] = {
     val query = merchantTransactionTable
-      .filter(_.merchantId === merchantId)
-      .filter(_.txnId === txnId)
-      .filter(_.txnType === txnType)
+      .filter { col =>
+        (col.merchantId === merchantId && col.txnId === txnId && col.txnType === txnType && col.partnerId === partnerId)
+      }
       .join(merchantTransactionLogTable)
       .on(_.txnId === _.txnId)
       .result
@@ -185,6 +187,7 @@ trait MerchantTransactionTrait {
       ) {
 
     def * = (
+      partnerId,
       merchantId,
       txnId,
       caseRefNo,
@@ -206,6 +209,7 @@ trait MerchantTransactionTrait {
 
     //  def activityId = column[Option[Int]]("ACTIVITY_ID", O.PrimaryKey, O.AutoInc)
 
+    def partnerId  = column[Int]("PARTNER_ID")
     def merchantId = column[String]("MERCHANT_ID")
 
     def txnId = column[String]("TXN_ID")
