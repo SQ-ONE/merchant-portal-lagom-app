@@ -10,14 +10,13 @@ import play.api.libs.json.{Format, Json}
 
 trait MerchantportallagomappService extends Service {
 
-
   def hello(name: String): ServiceCall[NotUsed, String]
 
-  def getRiskScore(merchantId: String): ServiceCall[NotUsed, MerchantRiskScoreResp]
+  def getRiskScore(merchantId: String, partnerId: Int): ServiceCall[NotUsed, MerchantRiskScoreResp]
 
-  def addRiskType : ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp]
+  def addRiskType(partnerId: Int) : ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp]
 
-  def getMerchantImpactData(merchantId: String): ServiceCall[NotUsed, BusinessImpact]
+  def getMerchantImpactData(merchantId: String, partnerId: Int): ServiceCall[NotUsed, BusinessImpact]
 
   def login:ServiceCall[MerchantLoginReq, MerchantLoginResp]
 
@@ -28,9 +27,9 @@ trait MerchantportallagomappService extends Service {
     named("merchant-portal-lagom-apps")
       .withCalls(
         restCall(Method.GET,"/api/hello/:name", hello _),
-        restCall(Method.GET, "/api/v1/merchantportal/risksetting/merchant/:merchantId",  getRiskScore _),
-        restCall(Method.POST, "/api/v1/merchantportal/risksetting/merchant/:merchantId",  addRiskType ),
-        restCall(Method.GET, "/api/v1/merchantportal/merchant/business/merchantId/:merchantId",  getMerchantImpactData _),
+        restCall(Method.GET, "/api/v1/merchantportal/risksetting/merchant/:merchantId/partner/:partnerId",  getRiskScore _),
+        restCall(Method.POST, "/api/v1/merchantportal/risksetting/merchant/:merchantId/partner/:partnerId",  addRiskType _),
+        restCall(Method.GET, "/api/v1/merchantportal/merchant/business/merchantId/:merchantId/partner/:partnerId",  getMerchantImpactData _),
         restCall(Method.POST, "/api/v1/merchantportal/login",  login),
         restCall(Method.POST, "/api/v1/merchantportal/logout",  logOut)
       ).withAutoAcl(true)
