@@ -80,6 +80,10 @@ class Pac4jAuthorizer(system: ActorSystem) extends SecuredService {
     }
     )
 
+  def getToken(userId: String) = {
+    redis.getToken(userId)
+  }
+
   def getUserDetailFromToken(token: String): (Date, String, Boolean) = {
     val tokenParser = JWTParser.parse(token)
     val expTimeFinal = tokenParser.getJWTClaimsSet.getExpirationTime

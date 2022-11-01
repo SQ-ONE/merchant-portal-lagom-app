@@ -30,26 +30,26 @@ class MerchantLoginRepo(db: Database)
       val fromOption = fromTry.flatMap { fromTrySeq =>
         Either.fromOption(fromTrySeq.headOption, GetUserDetailErr(s"No Merchant found with userName:$userName"))
       }
-      fromOption.map(x => MerchantLoginDetails(x._1.id,x._1.merchantId, x._1.merchantName,x._2.merchantMcc, x._1.isLoggedInFlag))
+      fromOption.map(x => MerchantLoginDetails(x._1.id,x._1.merchantId, x._1.merchantName, 1 ,x._2.merchantMcc, x._1.isLoggedInFlag))
     }
     db.run(query)
   }
 
   def updateMerchantLoginInfo(merchant: MerchantLoginDetails): Future[Either[MerchantPortalError, Done]] = {
     val action1 = merchantLoginTable.filter(_.merchantId === merchant.merchantId ).map(_.isLoggedInFlag).update(true)
-    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None,merchant.merchantId,Some(Timestamp.valueOf(LocalDateTime.now())),None)
+    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchant.merchantId, merchant.partnerId, Some(Timestamp.valueOf(LocalDateTime.now())),None)
 
     val addUserQuery = DBIO.seq(action1,action2).transactionally
     db.run(addUserQuery)
       .map { _ =>
         Done.asRight[UpdateLogInRedisErr]
       }.recover {
-      case ex => UpdateLogInRedisErr("Failed to updated login detail").asLeft[Done]
+      case ex => UpdateLogInRedisErr("Failed to update merchant login detail").asLeft[Done]
     }
   }
 
-  def logoutActivity(merchantId: String): Future[Either[MerchantPortalError, Done]] = {
-    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantId, None, Some(Timestamp.valueOf(LocalDateTime.now())))
+  def logoutActivity(merchantId: String, partnerId: Int = 1): Future[Either[MerchantPortalError, Done]] = {
+    val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantId, partnerId ,None, Some(Timestamp.valueOf(LocalDateTime.now())))
     db.run(action2)
       .map { _ =>
         Done.asRight[MerchantPortalError]
@@ -76,7 +76,7 @@ trait MerchantLoginTrait {
 
   class MerchantLoginTable(tag: Tag) extends Table[MerchantLogin](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_LOGIN") {
 
-    def * = (id, merchantId,merchantName, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
+    def * = (id, merchantId, merchantName, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
 
     def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 
@@ -93,11 +93,13 @@ trait MerchantLoginActivityTrait  {
 
   class MerchantLoginActivityTable(tag: Tag) extends Table[MerchantLoginActivity](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_LOGIN_ACTIVITY") {
 
-    def * = (activityId,merchantId,loginTime, logOutTime) <> ((MerchantLoginActivity.apply _).tupled, MerchantLoginActivity.unapply)
+    def * = (activityId, merchantId, partnerId, loginTime, logOutTime) <> ((MerchantLoginActivity.apply _).tupled, MerchantLoginActivity.unapply)
 
     def activityId = column[Option[Int]]("ACTIVITY_ID", O.PrimaryKey, O.AutoInc)
 
     def merchantId = column[String]("MERCHANT_ID")
+
+    def partnerId = column[Int]("PARTNER_ID")
 
     def loginTime = column[Option[Timestamp]]("LOGIN_TIME")
 
