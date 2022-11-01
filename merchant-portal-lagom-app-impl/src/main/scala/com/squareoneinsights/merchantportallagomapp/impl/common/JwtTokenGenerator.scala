@@ -18,7 +18,6 @@ object JwtTokenGenerator {
   private val config = ConfigFactory.load()
   private val list = config.getConfigList("pac4j.lagom.jwt.authenticator.signatures")
   private val s = list.get(0).getObject("jwk").render(ConfigRenderOptions.concise())
-  private val secret = config.getString("jwt.encryption.key")
 
   val refreshTokenExp: Int = config.getInt("jwt.token.refresh.expirationInSeconds")
 
@@ -37,6 +36,7 @@ object JwtTokenGenerator {
       .issuer("https://pac4j.org")
       .subject(content.merchantId)
       .claim("merchantId", content.merchantId)
+      .claim("partnerId", content.partnerId)
       .claim("merchantName", content.merchantName)
       .issueTime(new Date)
       .expirationTime(expiryDate)
@@ -50,39 +50,9 @@ object JwtTokenGenerator {
     Token(signedJWT.serialize())
   }
 
-
-
-    def generateRefreshToken(content: TokenContent, expiryDate: Date)(implicit format: Format[TokenContent]) =
-      Future {
-        Either.fromTry(Try({
-          val userRefresh = new JWTClaimsSet.Builder()
-            .issuer("https://squareoneinsights.com")
-            .subject(content.merchantId)
-            .claim("merchantId", content.merchantId)
-            .claim("merchantName", content.merchantName)
-            .claim("userName", content.merchantId)
-            .claim("isRefreshToken", true)
-            .jwtID(UUID.randomUUID.toString)
-            .build
-
-          val refreshClaim = JwtClaim(userRefresh.toString())
-            .expiresIn(refreshTokenExp)
-            .issuedNow
-
-          val refreshToken = JwtJson.encode(refreshClaim, secret, JwtAlgorithm.HS256)
-
-          Token(
-            authToken = "",
-            refreshToken = Some(refreshToken)
-          )
-        })).leftMap {
-          case ex: Throwable => CreateLogInTokenErr("Failed to create login token")
-        }
-      }
-
 }
 
-case class TokenContent(merchantId:String, merchantName:String, isRefreshToken: Boolean = false)
+case class TokenContent(merchantId:String, partnerId:Int, merchantName:String, isRefreshToken: Boolean = false)
 
 object TokenContent {
 

@@ -64,15 +64,16 @@ class Pac4jAuthorizer(system: ActorSystem) extends SecuredService {
       }
       else {
         val userId = profile.getAttribute("merchantId").asInstanceOf[String]
+        val partnerId = profile.getAttribute("partnerId").asInstanceOf[Long].toString
         val username = profile.getId
-        val tokenInRedisF = redis.getToken(userId)
+        val tokenInRedisF = redis.getToken(userId+partnerId)
         val z = tokenInRedisF.map { tokenInRedis =>
           val tokenInRequest = extractTokenHeader(req)
           tokenInRedis.filter(_ == tokenInRequest)
             .fold {
               throw Forbidden("Session expired. Please login again..")
             } { l =>
-              serviceCall(TokenContent(userId, username), tokenInRequest)
+              serviceCall(TokenContent(userId, partnerId.toInt,username), tokenInRequest)
             }
         }
         z

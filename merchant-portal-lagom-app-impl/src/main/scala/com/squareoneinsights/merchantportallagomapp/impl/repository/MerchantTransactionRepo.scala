@@ -32,10 +32,11 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
 
   def getTransactionsByType(
       merchantId: String,
-      txnType: String
+      txnType: String,
+      partnerId:Int
   ): Future[Either[MerchantPortalError, Seq[MerchantTransaction]]] = {
     val query =
-      merchantTransactionTable.filter(m => m.merchantId === merchantId && m.txnType === txnType).result.asTry.map {
+      merchantTransactionTable.filter(m => m.merchantId === merchantId && m.txnType === txnType && m.partnerId === partnerId).result.asTry.map {
         merchantWithTry =>
           Either.fromTry(merchantWithTry).leftMap(err => MerchantTxnErr(err.getMessage))
       }
@@ -89,7 +90,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
     val sql = sql""" SELECT "TXN_ID","CASE_REF_NO","TXN_TIMESTAMP","TXN_AMOUNT","IFRM_VERDICT", "INVESTIGATION_STATUS",
                      "CHANNEL","TXN_TYPE","RESPONSE_CODE"
                    FROM "IFRM_LIST_LIMITS"."MERCHANT_TRANSACTION_DETAILS" WHERE
-                     "MERCHANT_ID" = '#$merchantId' AND "TXN_TYPE" = '#$txnType' #${tailRecFilter(flt)} AND "PARTNER_ID" = '$partnerId'
+                     "MERCHANT_ID" = '#$merchantId' AND "TXN_TYPE" = '#$txnType' #${tailRecFilter(flt)} AND "PARTNER_ID" = '#$partnerId'
                      ORDER BY "TXN_TIMESTAMP" DESC
          """.as[MerchantTransactionResp]
 
@@ -162,7 +163,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
 
 trait MerchantTransactionLogTrait {
   class MerchantTransactionLogTable(tag: Tag)
-      extends Table[MerchantTransactionLog](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_TRANSACTION_LOG") {
+      extends Table[MerchantTransactionLog](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_TRANSACTION_LOGS") {
 
     def * = (id, txnId, logName, logValue) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
 
@@ -172,7 +173,7 @@ trait MerchantTransactionLogTrait {
 
     def logName = column[String]("LOG_NAME")
 
-    def logValue = column[String]("LOG_ID")
+    def logValue = column[String]("LOG_VALUE")
 
   }
 }

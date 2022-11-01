@@ -2,7 +2,7 @@ package com.squareoneinsights.merchantportallagomapp.api.request
 
 import play.api.libs.json.{Format, Json}
 
-case class MerchantLoginReq(userName:String, password:String)
+case class MerchantLoginReq(userName:String, partnerId:Int, password:String)
 
 object MerchantLoginReq {
 

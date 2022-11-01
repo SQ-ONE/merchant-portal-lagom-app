@@ -69,16 +69,8 @@ trait MerchantportallagomappService extends Service {
         restCall(Method.POST, "/api/v1/merchantportal/logout",  logOut),
         restCall(Method.GET, "/api/v1/merchantportal/txn/:txnType/:merchantId/:partnerId", getTransactions _),
         restCall(Method.POST, "/api/v1/merchantportal/search/:txnType/:merchantId/:partnerId", getTransactionsBySearch _),
-        restCall(
-          Method.GET,
-          "/api/v1/merchantportal/search/list",
-          getTxnSearchCriteriaList
-        ),
-        restCall(
-          Method.GET,
-          "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId",
-          getTxnDetails _
-        )
+        restCall(Method.GET, "/api/v1/merchantportal/search/list", getTxnSearchCriteriaList),
+        restCall(Method.GET, "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId/:partnerId", getTxnDetails _)
       )
       .withAutoAcl(true)
   }

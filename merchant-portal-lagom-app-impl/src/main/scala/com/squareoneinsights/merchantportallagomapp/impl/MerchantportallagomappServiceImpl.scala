@@ -171,20 +171,14 @@ class MerchantportallagomappServiceImpl(
 
   override def login = ServerServiceCall { (requestHeader, userLoginDetails) =>
     val resp = for {
-      merchant <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName))
+      merchant <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName,userLoginDetails.partnerId))
       //  _ <- EitherT(WindowsADAuthenticator.authenticateUser(userLoginDetails.userName, userLoginDetails.password))
-      tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId, merchant.merchantName))
+      tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId,merchant.partnerId, merchant.merchantName))
       jwt <- EitherT(
         JwtTokenGenerator.createToken(tokenContent, new DateTime().plusMinutes(tokenValidityInMinutes).toDate)
       )
       _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
-      _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId, jwt.authToken))
-      jwtFreshToken <- EitherT(
-        JwtTokenGenerator.generateRefreshToken(tokenContent, new DateTime().plusMinutes(tokenValidityInMinutes).toDate)
-      )
-      _ <- EitherT(
-        redisUtility.addTokenToRedis(merchant.merchantId + "_refreshToken", jwtFreshToken.refreshToken.getOrElse(""))
-      )
+      _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId+merchant.partnerId, jwt.authToken))
     } yield (merchant, jwt)
     val response = resp.value.map {
       case Left(err) => {
@@ -196,7 +190,7 @@ class MerchantportallagomappServiceImpl(
         }
       }
       case Right((data, auth)) =>
-        (MerchantLoginResp(data.merchantId, data.merchantId, data.merchantName, data.merchantMcc, true), auth)
+        (MerchantLoginResp(data.merchantId, data.partnerId,data.merchantId, data.merchantName, data.merchantMcc, true), auth)
     }
     response.map { case (res, auth) =>
       val header =
@@ -209,11 +203,10 @@ class MerchantportallagomappServiceImpl(
     authorize((tokenContent, _) =>
       ServerServiceCall { req =>
         val query = for {
-          merchant     <- EitherT(merchantLoginRepo.getUserByName(req.userName))
-          updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName))
-          del          <- EitherT(redisUtility.deleteTokenFromRedis(req.userName))
-          _            <- EitherT(merchantLoginRepo.logoutActivity(merchant.merchantId))
-          delR         <- EitherT(redisUtility.deleteTokenFromRedis(req.userName + "_refreshToken"))
+          merchant     <- EitherT(merchantLoginRepo.getUserByName(req.userName, req.partnerId))
+          updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName, req.partnerId))
+          del          <- EitherT(redisUtility.deleteTokenFromRedis(req.userName+req.partnerId))
+          _            <- EitherT(merchantLoginRepo.logoutActivity(merchant.merchantId, merchant.partnerId))
         } yield del
         query.value.map {
           case Left(err) => {
@@ -238,7 +231,7 @@ class MerchantportallagomappServiceImpl(
     authorize((tokenContent, _) =>
       ServerServiceCall { req =>
         val resp = for {
-          merchant <- EitherT(merchantTransactionRepo.getTransactionsByType(merchantId, txnType))
+          merchant <- EitherT(merchantTransactionRepo.getTransactionsByType(merchantId, txnType,partnerId))
         } yield merchant
         resp.value.map {
           case Left(err) =>
