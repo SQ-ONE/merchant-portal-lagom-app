@@ -7,10 +7,7 @@ import com.lightbend.lagom.scaladsl.api.transport.Method
 import com.lightbend.lagom.scaladsl.api.Descriptor
 import com.lightbend.lagom.scaladsl.api.Service
 import com.lightbend.lagom.scaladsl.api.ServiceCall
-import com.squareoneinsights.merchantportallagomapp.api.request.LogOutReq
-import com.squareoneinsights.merchantportallagomapp.api.request.MerchantLoginReq
-import com.squareoneinsights.merchantportallagomapp.api.request.MerchantRiskScoreReq
-import com.squareoneinsights.merchantportallagomapp.api.request.TransactionFilterReq
+import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, PartnerDetails, TransactionFilterReq}
 import com.squareoneinsights.merchantportallagomapp.api.response.BusinessImpact
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantImpactDataResp
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantLoginResp
@@ -57,6 +54,8 @@ trait MerchantportallagomappService extends Service {
       partnerId: Int
   ): ServiceCall[NotUsed, MerchantTransactionDetails]
 
+  def getPartners :ServiceCall[NotUsed, Seq[PartnerDetails]]
+
   final override def descriptor: Descriptor = {
     import Service._
     named("merchant-portal-lagom-apps")
@@ -70,7 +69,8 @@ trait MerchantportallagomappService extends Service {
         restCall(Method.GET, "/api/v1/merchantportal/txn/:txnType/:merchantId/:partnerId", getTransactions _),
         restCall(Method.POST, "/api/v1/merchantportal/search/:txnType/:merchantId/:partnerId", getTransactionsBySearch _),
         restCall(Method.GET, "/api/v1/merchantportal/search/list", getTxnSearchCriteriaList),
-        restCall(Method.GET, "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId/:partnerId", getTxnDetails _)
+        restCall(Method.GET, "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId/:partnerId", getTxnDetails _),
+        restCall(Method.GET, "/api/v1/merchantportal/getPartners", getPartners)
       )
       .withAutoAcl(true)
   }
