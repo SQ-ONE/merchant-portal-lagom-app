@@ -15,16 +15,13 @@ import cats.implicits.{catsStdInstancesForFuture, catsSyntaxEitherId}
 import com.lightbend.lagom.scaladsl.api.transport.{BadRequest, ResponseHeader}
 import com.lightbend.lagom.scaladsl.server.ServerServiceCall
 import com.squareoneinsights.merchantportallagomapp.api.request.{LogOutReq, MerchantLoginReq, MerchantRiskScoreReq, RiskType}
-import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, PartnerInfo, ResponseMessage}
 import com.squareoneinsights.merchantportallagomapp.impl.MerchantportallagomappServiceImpl.{maxAgeInSeconds, tokenValidityInMinutes}
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
-import com.squareoneinsights.merchantportallagomapp.impl.common.{JwtTokenGenerator, Pac4jAuthorizer, RedisUtility, TokenContent}
-import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, ResponseMessage}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, FailedToGetPartner, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, Pac4jAuthorizer, RedisUtility, TokenContent, UpdateLogInRedisErr}
 import com.squareoneinsights.merchantportallagomapp.impl.authenticator.WindowsADAuthenticator
-import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, RedisUtility, TokenContent, UpdateLogInRedisErr}
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
-import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo}
-import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantRiskScoreDetailRepo}
+import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo, PartnerInfoRepo}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.joda.time.DateTime
 import org.slf4j.{Logger, LoggerFactory}
@@ -39,6 +36,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
                                         businessImpactRepo: BusinessImpactRepo,
                                         merchantLoginRepo:MerchantLoginRepo,
                                         redisUtility: RedisUtility,
+                                        partnerInfoRepo: PartnerInfoRepo,
                                         system: ActorSystem)
                                        (implicit ec: ExecutionContext)
   extends  Pac4jAuthorizer(system)  with MerchantportallagomappService {
@@ -180,6 +178,18 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
       }
     }
   })
+
+  override def getPartner: ServiceCall[NotUsed, Seq[PartnerInfo]] =
+    authorize((tokenContent, _) =>
+      ServerServiceCall { _ =>
+        partnerInfoRepo.getPartners.map {
+          case Left(lerr) => logger.info(s"LogOut Failed. \n Error: ${lerr}")
+            lerr match {
+              case getErr: FailedToGetPartner => throw BadRequest(getErr.err)
+            }
+          case Right(value) => value
+        }
+      })
 }
 
 

@@ -19,3 +19,4 @@ case class LogoutRedisErr(err: String) extends MerchantPortalError
 case class LogInRedisErr(err: String) extends MerchantPortalError
 case class UpdateLogInRedisErr(err: String) extends MerchantPortalError
 case class CreateLogInTokenErr(err: String) extends MerchantPortalError
+case class FailedToGetPartner(err: String) extends MerchantPortalError
