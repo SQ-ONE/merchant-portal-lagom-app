@@ -180,7 +180,6 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
   })
 
   override def getPartner: ServiceCall[NotUsed, Seq[PartnerInfo]] =
-    authorize((tokenContent, _) =>
       ServerServiceCall { _ =>
         partnerInfoRepo.getPartners.map {
           case Left(lerr) => logger.info(s"LogOut Failed. \n Error: ${lerr}")
@@ -189,7 +188,7 @@ class MerchantportallagomappServiceImpl(merchantRiskScoreDetailRepo: MerchantRis
             }
           case Right(value) => value
         }
-      })
+      }
 }
 
 
