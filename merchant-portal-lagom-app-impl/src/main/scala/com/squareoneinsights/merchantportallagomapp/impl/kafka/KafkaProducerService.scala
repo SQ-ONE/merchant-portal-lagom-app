@@ -33,10 +33,10 @@ class KafkaProduceService {
       .withBootstrapServers(broker)
   }
 
-  def sendMessage(merchantId: String, oldRiskListType: RiskType.Value, updatedListType: RiskType.Value): Future[Either[MerchantPortalError, Done]] = {
+  def sendMessage(merchantId: String, oldRiskListType: RiskType.Value, updatedListType: RiskType.Value, partnerId: Int): Future[Either[MerchantPortalError, Done]] = {
     println("Inside sendMessage.......")
     val producerSet = configureKafkaProducer.createKafkaProducer()
-    val riskScoreReq = MerchantRiskScoreProducer.apply(merchantId, oldRiskListType, updatedListType)
+    val riskScoreReq = MerchantRiskScoreProducer.apply(partnerId, merchantId, oldRiskListType, updatedListType)
     val source = List(new ProducerRecord[String, MerchantRiskScoreProducer](topicName, riskScoreReq))
     val q: Future[Done] = Source(source)
       .runWith(Producer.plainSink(configureKafkaProducer, producerSet))

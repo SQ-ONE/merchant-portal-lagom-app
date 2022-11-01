@@ -82,7 +82,7 @@ object JwtTokenGenerator {
 
 }
 
-case class TokenContent(merchantId:String,merchantName:String, isRefreshToken: Boolean = false)
+case class TokenContent(merchantId:String, merchantName:String, isRefreshToken: Boolean = false)
 
 object TokenContent {
 

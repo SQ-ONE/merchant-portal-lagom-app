@@ -16,9 +16,9 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
   //val logger: Logger = LoggerFactory.getLogger(BusinessImpactRepo)
   val businessImpactTable = TableQuery[BusinessImpactTable]
 
-  def fetchBusinessDetail(merchantId: String): Future[Either[MerchantPortalError, BusinessImpactDetail]] = {
+  def fetchBusinessDetail(merchantId: String, partnerId: Int): Future[Either[MerchantPortalError, BusinessImpactDetail]] = {
     println("fetchBusinessDetail.............")
-    val businessImpact = businessImpactTable.filter(col => (col.merchantId === merchantId))
+    val businessImpact = businessImpactTable.filter(col => (col.merchantId === merchantId && col.partnerId === partnerId))
     db.run(businessImpact.result).map { x =>
       Either.fromOption(x.headOption, GetBusinessImpactErr(s"No Business Impact found for merchantId: ${merchantId}"))
     }

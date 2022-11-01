@@ -20,9 +20,9 @@ class MerchantRiskScoreDetailRepo(db: Database)
   private val merchantRiskScoreDetailTable = TableQuery[MerchantRiskScoreDetailTable]
 
   //val db = Database.forConfig("postgreDBProfile")
-  def updateRiskScore(riskScoreReq: MerchantRiskScoreReq): Future[Either[MerchantPortalError, Done]] = {
+  def updateRiskScore(riskScoreReq: MerchantRiskScoreReq, partnerId: Int): Future[Either[MerchantPortalError, Done]] = {
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
-    val update = merchantRiskScoreDetailTable.filter(_.merchantId === riskScoreReq.merchantId).map(row => (row.oldSliderPosition, row.updatedSliderPosition, row.approvalFlag, row.updateTimestamp))
+    val update = merchantRiskScoreDetailTable.filter(col => (col.merchantId === riskScoreReq.merchantId && col.partnerId === partnerId)).map(row => (row.oldSliderPosition, row.updatedSliderPosition, row.approvalFlag, row.updateTimestamp))
       .update(riskScoreReq.oldRisk.toString, riskScoreReq.updatedRisk.toString, approvalFlag, LocalDateTime.now())
     //val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())
     db.run(update).map { _ =>
@@ -50,27 +50,25 @@ class MerchantRiskScoreDetailRepo(db: Database)
     }
   }
 
-  def fetchRiskScore(merchantId: String): Future[Either[MerchantPortalError, MerchantRiskScoreResp]] = {
+  def fetchRiskScore(merchantId: String, partnerId: Int): Future[Either[MerchantPortalError, MerchantRiskScoreResp]] = {
     println("fetchRiskScore.............")
-    val fetchMessage = merchantRiskScoreDetailTable.filter(_.merchantId === merchantId)
+    val fetchMessage = merchantRiskScoreDetailTable.filter(col => (col.merchantId ===  merchantId && col.partnerId === partnerId))
     db.run(fetchMessage.result.headOption)
       .map { fromTryMerchant =>
         Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant.merchantId, RiskType.withName(seqMerchant.oldSliderPosition), RiskType.withName(seqMerchant.updatedSliderPosition), seqMerchant.approvalFlag)), GetMerchantErr("No merchant found for MerchantId: ${merchantId}"))
       }
   }
 
-  def checkRiskScoreExist(merchantId: String): Future[Either[MerchantPortalError, Boolean]] = {
+  def checkRiskScoreExist(merchantId: String, partnerId: Int): Future[Either[MerchantPortalError, Boolean]] = {
     val containsBay = for {
-      m <- merchantRiskScoreDetailTable
-      if m.merchantId like s"%${merchantId}%"
-    } yield m
+      m <- merchantRiskScoreDetailTable.filter(row => (row.partnerId === partnerId && row.merchantId === merchantId))
+      } yield m
     val bayMentioned = containsBay.exists.result
     db.run(bayMentioned)
       .map(value => value.asRight[MerchantPortalError]).recover {
       case ex => CheckRiskScoreExist(ex.toString).asLeft[Boolean]
     }
   }
-
 }
 
 trait MerchantRiskScoreDetailTrait {
@@ -81,6 +79,8 @@ trait MerchantRiskScoreDetailTrait {
 
     def requestId = column[Int]("REQUEST_ID", O.AutoInc, O.Unique)
 
+    def partnerId = column[Int]("PARTNER_ID")
+
     def merchantId = column[String]("MERCHANT_ID")
 
     def oldSliderPosition = column[String]("OLD_RISK")
@@ -88,6 +88,8 @@ trait MerchantRiskScoreDetailTrait {
     def updatedSliderPosition = column[String]("UPDATED_RISK")
 
     def approvalFlag = column[String]("APPROVAL_FLAG")
+
+    def isActive = column[Boolean]("IS_ACTIVE")
 
     def updateTimestamp = column[LocalDateTime]("UPDATED_TIMESTAMP")
 
