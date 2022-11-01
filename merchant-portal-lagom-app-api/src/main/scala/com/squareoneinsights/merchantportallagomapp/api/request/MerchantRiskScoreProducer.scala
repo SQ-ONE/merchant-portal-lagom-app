@@ -2,7 +2,7 @@ package com.squareoneinsights.merchantportallagomapp.api.request
 
 import play.api.libs.json.{Format, Json, Reads}
 
-case class MerchantRiskScoreProducer(merchantId: String, oldRiskType: RiskType.Value, updatedListType: RiskType.Value)
+case class MerchantRiskScoreProducer(partnerId: Int, merchantId: String, oldRiskType: RiskType.Value, updatedListType: RiskType.Value)
 
 object MerchantRiskScoreProducer {
 
