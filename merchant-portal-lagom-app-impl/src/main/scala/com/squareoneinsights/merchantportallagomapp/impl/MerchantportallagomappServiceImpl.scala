@@ -23,7 +23,7 @@ import com.squareoneinsights.merchantportallagomapp.api.request.MerchantRiskScor
 import com.squareoneinsights.merchantportallagomapp.api.request.RiskType
 import com.squareoneinsights.merchantportallagomapp.api.request.TransactionFilterReq
 import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransactionDetails, MerchantTransactionResp, MerchantTxnSearchCriteria, PartnerInfo, ResponseMessage}
-import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, FailedToGetPartner, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, MerchantTxnErr, Pac4jAuthorizer, RedisUtility, TokenContent, UpdateLogInRedisErr}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, FailedToGetPartner, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, MerchantTxnErr, Pac4jAuthorizer, RedisUtility, RiskSettingProducerErr, TokenContent, UpdateLogInRedisErr, UpdatedRiskErr}
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantLoginResp
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantRiskScoreResp
 import com.squareoneinsights.merchantportallagomapp.impl.MerchantportallagomappServiceImpl.tokenValidityInMinutes
@@ -99,15 +99,21 @@ class MerchantportallagomappServiceImpl(
      authorize((tokenContent, _) =>
     ServerServiceCall { riskJson =>
       val resp = for {
-        toRedis <- EitherT(merchantRiskScoreDetailRepo.updateRiskScore(riskJson,partnerId))
+        toRedis <- EitherT(merchantRiskScoreDetailRepo.updateRiskScore(riskJson, partnerId))
         //toRdbms <- EitherT(addRiskToRedis.publishMerchantRiskType(riskJson.merchantId, riskJson.riskType))
         toKafka <- EitherT(kafkaProduceService.sendMessage(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk, partnerId))
       } yield(toKafka)
       resp.value.map {
         case Left(err) => {
           err match {
-            case addEr: AddMerchantErr => throw BadRequest(addEr.err)
-            case er => throw new MatchError(er)
+            case addEr: UpdatedRiskErr => {
+              logger.info("Inside addRiskType1 =>"+addEr.err)
+              throw BadRequest(addEr.err)
+            }
+            case rskErr : RiskSettingProducerErr => {
+              logger.info("Inside addRiskType1 =>"+rskErr.err)
+              throw BadRequest(rskErr.err)
+            }
           }
         }
         case Right(_) => {
@@ -160,7 +166,7 @@ class MerchantportallagomappServiceImpl(
         }
       }
       case Right((data, auth)) =>
-        (MerchantLoginResp(data.merchantId, data.partnerId, "NA", data.merchantName, "mcc", true), auth)
+        (MerchantLoginResp(data.merchantId, data.partnerId, data.merchantId, data.merchantName, "mcc", true), auth)
     }
     response.map { case (res, auth) =>
       val header =

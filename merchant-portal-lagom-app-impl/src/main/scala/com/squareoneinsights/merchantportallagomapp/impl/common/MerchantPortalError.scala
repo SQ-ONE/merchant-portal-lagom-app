@@ -3,7 +3,7 @@ package com.squareoneinsights.merchantportallagomapp.impl.common
 trait MerchantPortalError
 
 case class AddMerchantErr(err: String) extends MerchantPortalError
-case class RiskSettingProducerErr()  extends MerchantPortalError
+case class RiskSettingProducerErr(err: String)  extends MerchantPortalError
 case class GetMerchantOnboard(err: String) extends MerchantPortalError
 case class GetMerchantErr(err: String) extends MerchantPortalError
 case class CheckRiskScoreExist(err: String) extends MerchantPortalError

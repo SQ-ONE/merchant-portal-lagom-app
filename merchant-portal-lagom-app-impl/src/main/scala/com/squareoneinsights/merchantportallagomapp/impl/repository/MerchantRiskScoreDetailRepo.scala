@@ -21,15 +21,18 @@ class MerchantRiskScoreDetailRepo(db: Database)
 
   //val db = Database.forConfig("postgreDBProfile")
   def updateRiskScore(riskScoreReq: MerchantRiskScoreReq, partnerId: Int): Future[Either[MerchantPortalError, Done]] = {
+    logger.info("Inside updateRiskScore---->"+riskScoreReq)
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
     val update = merchantRiskScoreDetailTable.filter(col => (col.merchantId === riskScoreReq.merchantId && col.partnerId === partnerId))
       .map(row => (row.oldSliderPosition, row.updatedSliderPosition, row.approvalFlag, row.updateTimestamp))
       .update(riskScoreReq.oldRisk.toString, riskScoreReq.updatedRisk.toString, approvalFlag, Some(LocalDateTime.now()))
-    //val insertMessage = merchantRiskScoreDetailTable +=  MerchantRiskScore(0, riskScoreReq.merchantId, riskScoreReq.oldRisk, riskScoreReq.updatedRisk, approvalFlag, LocalDateTime.now())
     db.run(update).map { _ =>
       Done.asRight[MerchantPortalError]
     }.recover {
-      case ex => UpdatedRiskErr(ex.getMessage).asLeft[Done]
+      case ex => {
+        logger.info("Inside updateRiskScore error---->"+ex)
+        UpdatedRiskErr(ex.getMessage).asLeft[Done]
+      }
     }
   }
 
