@@ -23,8 +23,8 @@ class MerchantLoginRepo(db: Database)
 
   val merchantRisk = TableQuery[MerchantRiskScoreDetailTable]
 
-  def getUserByName(userName: String, loginFlag: Int ): Future[Either[GetUserDetailErr, MerchantLoginDetails]] = {
-    val query = (merchantLoginTable.filter(col => (col.merchantId === userName && col.isLoggedInFlag === loginFlag)))
+  def getUserByName(userName: String): Future[Either[GetUserDetailErr, MerchantLoginDetails]] = {
+    val query = (merchantLoginTable.filter(col => (col.merchantId === userName)))
       .result.asTry.map { merchantWithTry =>
       val fromTry = Either.fromTry(merchantWithTry).leftMap(err => GetUserDetailErr(err.getMessage))
       val fromOption = fromTry.flatMap { fromTrySeq =>

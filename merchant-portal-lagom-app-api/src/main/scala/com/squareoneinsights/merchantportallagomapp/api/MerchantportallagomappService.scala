@@ -51,7 +51,8 @@
                    partnerId: Int
                   ): ServiceCall[NotUsed, MerchantRiskScoreResp]
 
-  def addRiskType(partnerId: Int
+  def addRiskType(partnerId: Int,
+                  merchantId: String
                   ): ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp]
 
   def getMerchantImpactData(merchantId: String,

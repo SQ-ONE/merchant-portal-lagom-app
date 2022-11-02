@@ -20,10 +20,10 @@ class MerchantRiskScoreDetailRepo(db: Database)
   private val merchantRiskScoreDetailTable = TableQuery[MerchantRiskScoreDetailTable]
 
   //val db = Database.forConfig("postgreDBProfile")
-  def updateRiskScore(riskScoreReq: MerchantRiskScoreReq, partnerId: Int): Future[Either[MerchantPortalError, Done]] = {
+  def updateRiskScore(riskScoreReq: MerchantRiskScoreReq, partnerId: Int, merchantId: String): Future[Either[MerchantPortalError, Done]] = {
     logger.info("Inside updateRiskScore---->"+riskScoreReq)
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
-    val update = merchantRiskScoreDetailTable.filter(col => (col.merchantId === riskScoreReq.merchantId && col.partnerId === partnerId))
+    val update = merchantRiskScoreDetailTable.filter(col => (col.merchantId === merchantId && col.partnerId === partnerId))
       .map(row => (row.oldSliderPosition, row.updatedSliderPosition, row.approvalFlag, row.updateTimestamp))
       .update(riskScoreReq.oldRisk.toString, riskScoreReq.updatedRisk.toString, approvalFlag, Some(LocalDateTime.now()))
     db.run(update).map { _ =>

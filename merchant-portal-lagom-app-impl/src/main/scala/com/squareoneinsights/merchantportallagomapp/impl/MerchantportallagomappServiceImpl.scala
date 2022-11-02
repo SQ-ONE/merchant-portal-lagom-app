@@ -95,11 +95,11 @@ class MerchantportallagomappServiceImpl(
 */
 
 
-   override def addRiskType(partnerId: Int): ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
+   override def addRiskType(partnerId: Int, merchantId: String): ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
      authorize((tokenContent, _) =>
     ServerServiceCall { riskJson =>
       val resp = for {
-        toRedis <- EitherT(merchantRiskScoreDetailRepo.updateRiskScore(riskJson, partnerId))
+        toRedis <- EitherT(merchantRiskScoreDetailRepo.updateRiskScore(riskJson, partnerId, merchantId))
         //toRdbms <- EitherT(addRiskToRedis.publishMerchantRiskType(riskJson.merchantId, riskJson.riskType))
         toKafka <- EitherT(kafkaProduceService.sendMessage(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk, partnerId))
       } yield(toKafka)
@@ -141,7 +141,7 @@ class MerchantportallagomappServiceImpl(
 
   override def login = ServerServiceCall{(requestHeader, userLoginDetails) =>
     val resp = for {
-      merchant <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName, 0))
+      merchant <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName))
       //  _ <- EitherT(WindowsADAuthenticator.authenticateUser(userLoginDetails.userName, userLoginDetails.password))
       tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId, merchant.merchantName))
       jwt <- EitherT(
@@ -179,10 +179,10 @@ class MerchantportallagomappServiceImpl(
     authorize((tokenContent, _) =>
     ServerServiceCall { req =>
     val query = for {
-      merchant <- EitherT(merchantLoginRepo.getUserByName(req.userName, 1))
-      updateStatus <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName))
-      del <- EitherT(redisUtility.deleteTokenFromRedis(req.userName))
-      _<- EitherT(merchantLoginRepo.logoutActivity(merchant.merchantId))
+      merchant      <- EitherT(merchantLoginRepo.getUserByName(req.userName))
+      updateStatus  <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName))
+      del           <- EitherT(redisUtility.deleteTokenFromRedis(req.userName))
+                   _<- EitherT(merchantLoginRepo.logoutActivity(merchant.merchantId))
       delR <- EitherT(redisUtility.deleteTokenFromRedis(req.userName+"_refreshToken"))
     } yield(del)
     query.value.map {
