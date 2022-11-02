@@ -5,10 +5,30 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7ff5fc69-ddd4-43d2-a55b-2e05fb735064" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.scalafmt.conf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/request/TransactionFilterReq.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/CaseDetails.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/CaseLogDetails.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/Logs.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/MerchantTransactionDetails.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/MerchantTransactionResp.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/MerchantTxnSearchCriteria.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/TxnDetails.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/TxnSearchCriteriaResult.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/kafka/KafkaTransactionConsumer.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/model/MerchantTransactions.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantTransactionRepo.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/util/MerchantUtil.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/common/Pac4jAuthorizer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/common/Pac4jAuthorizer.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/MerchantportallagomappService.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/MerchantportallagomappService.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/request/LogOutReq.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/request/LogOutReq.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/MerchantLoginResp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/MerchantLoginResp.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/resources/application.conf" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/resources/application.conf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappLoader.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappLoader.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappServiceImpl.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/MerchantportallagomappServiceImpl.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/common/MerchantPortalError.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/common/MerchantPortalError.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/model/MerchantLogin.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/model/MerchantLogin.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/model/MerchantLoginActivity.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/model/MerchantLoginActivity.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantLoginRepo.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantLoginRepo.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -26,6 +46,14 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
   </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="1" />

@@ -5,7 +5,6 @@ import slick.jdbc.PostgresProfile.api._
 import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.impl.common.{GetUserDetailErr, LogoutErr, MerchantPortalError, UpdateLogInRedisErr}
 import com.squareoneinsights.merchantportallagomapp.impl.model.{Merchant, MerchantLogin, MerchantLoginActivity, MerchantLoginDetails}
-import org.joda.time.LocalDate
 
 import java.sql.{Date, Timestamp}
 import java.time.LocalDateTime
@@ -13,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 class MerchantLoginRepo(db: Database)
-                       (implicit ec: ExecutionContext) extends  MerchantLoginTrait with MerchantLoginActivityTrait with MerchantTrait {
+                       (implicit ec: ExecutionContext) extends  MerchantLoginTrait with MerchantLoginActivityTrait with MerchantTrait with MerchantRiskScoreDetailTrait {
 
 
   val merchantLoginTable = TableQuery[MerchantLoginTable]
@@ -22,21 +21,22 @@ class MerchantLoginRepo(db: Database)
 
   val merchantTable = TableQuery[MerchantTable]
 
-  def getUserByName(userName: String): Future[Either[GetUserDetailErr, MerchantLoginDetails]] = {
-    val query = (merchantLoginTable.filter(_.merchantId === userName)
-      .join(merchantTable).on(_.merchantId === _.merchantId))
+  val merchantRisk = TableQuery[MerchantRiskScoreDetailTable]
+
+  def getUserByName(userName: String, loginFlag: Int ): Future[Either[GetUserDetailErr, MerchantLoginDetails]] = {
+    val query = (merchantLoginTable.filter(col => (col.merchantId === userName && col.isLoggedInFlag === loginFlag)))
       .result.asTry.map { merchantWithTry =>
       val fromTry = Either.fromTry(merchantWithTry).leftMap(err => GetUserDetailErr(err.getMessage))
       val fromOption = fromTry.flatMap { fromTrySeq =>
-        Either.fromOption(fromTrySeq.headOption, GetUserDetailErr(s"No Merchant found with userName:$userName"))
+        Either.fromOption(fromTrySeq.headOption, GetUserDetailErr(s"Not found or already loggedIn Merchant : $userName"))
       }
-      fromOption.map(x => MerchantLoginDetails(x._1.id,x._1.merchantId, x._1.merchantName, 1 ,x._2.merchantMcc, x._1.isLoggedInFlag))
+      fromOption.map(x => MerchantLoginDetails(x.id, x.merchantId, x.merchantName, x.partnerId, x.isLoggedInFlag))
     }
     db.run(query)
   }
 
   def updateMerchantLoginInfo(merchant: MerchantLoginDetails): Future[Either[MerchantPortalError, Done]] = {
-    val action1 = merchantLoginTable.filter(_.merchantId === merchant.merchantId ).map(_.isLoggedInFlag).update(true)
+    val action1 = merchantLoginTable.filter(col => (col.merchantId === merchant.merchantId && col.partnerId === merchant.partnerId)).map(_.isLoggedInFlag).update(1)
     val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchant.merchantId, merchant.partnerId, Some(Timestamp.valueOf(LocalDateTime.now())),None)
 
     val addUserQuery = DBIO.seq(action1,action2).transactionally
@@ -44,7 +44,7 @@ class MerchantLoginRepo(db: Database)
       .map { _ =>
         Done.asRight[UpdateLogInRedisErr]
       }.recover {
-      case ex => UpdateLogInRedisErr("Failed to update merchant login detail").asLeft[Done]
+      case ex => UpdateLogInRedisErr("Failed to updated login detail").asLeft[Done]
     }
   }
 
@@ -58,7 +58,7 @@ class MerchantLoginRepo(db: Database)
     }
   }
   def updateMerchantLoginStatus(merchantName: String): Future[Either[MerchantPortalError, Done]] = {
-    val action1 = merchantLoginTable.filter(_.merchantName === merchantName).map(_.isLoggedInFlag).update(false)
+    val action1 = merchantLoginTable.filter(_.merchantName === merchantName).map(_.isLoggedInFlag).update(0)
     //val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantName ,Some(Timestamp.valueOf(LocalDateTime.now())),None)
 
     val addUserQuery = DBIO.seq(action1).transactionally
@@ -76,15 +76,17 @@ trait MerchantLoginTrait {
 
   class MerchantLoginTable(tag: Tag) extends Table[MerchantLogin](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_LOGIN") {
 
-    def * = (id, merchantId, merchantName, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
+    def * = (id, merchantId, partnerId, merchantName, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
 
     def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 
     def merchantId = column[String]("MERCHANT_ID", O.Unique)
 
+    def partnerId = column[Int]("PARTNER_ID")
+
     def merchantName = column[String]("MERCHANT_NAME")
 
-    def isLoggedInFlag = column[Boolean]("IS_MERCHANT_ACTIVE")
+    def isLoggedInFlag = column[Int]("IS_MERCHANT_ACTIVE")
 
   }
 }
