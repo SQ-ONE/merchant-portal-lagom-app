@@ -6,5 +6,4 @@ case class MerchantRiskScore(requestId: Int,
                              merchantId: String,
                              oldSliderPosition: String,
                              updatedSliderPosition: String,
-                             approvalFlag: String,
-                             updateTimestamp: LocalDateTime)
+                             approvalFlag: String)
