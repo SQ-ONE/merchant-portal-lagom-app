@@ -76,7 +76,7 @@ trait MerchantLoginTrait {
 
   class MerchantLoginTable(tag: Tag) extends Table[MerchantLogin](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_LOGIN") {
 
-    def * = (id, merchantId, partnerId, merchantName, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
+    def * = (id, merchantId, partnerId, merchantName, isMerchantActive, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
 
     def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
 
@@ -86,7 +86,9 @@ trait MerchantLoginTrait {
 
     def merchantName = column[String]("MERCHANT_NAME")
 
-    def isLoggedInFlag = column[Int]("IS_MERCHANT_ACTIVE")
+    def isMerchantActive = column[Int]("IS_MERCHANT_ACTIVE")
+
+    def isLoggedInFlag = column[Int]("IS_ACTIVE")
 
   }
 }

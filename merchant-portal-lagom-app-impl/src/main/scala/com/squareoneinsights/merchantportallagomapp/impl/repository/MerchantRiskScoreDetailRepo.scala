@@ -52,7 +52,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
 
   def fetchRiskScore(merchantId: String, partnerId: Int): Future[Either[MerchantPortalError, MerchantRiskScoreResp]] = {
     println("fetchRiskScore.............")
-    val fetchMessage = merchantRiskScoreDetailTable.filter(col => (col.merchantId ===  merchantId && col.partnerId === partnerId))
+    val fetchMessage = merchantRiskScoreDetailTable.filter(col => (col.merchantId ===  merchantId && col.partnerId === partnerId  && col.isActive === 1))
     db.run(fetchMessage.result.headOption)
       .map { fromTryMerchant =>
         Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant.merchantId, RiskType.withName(seqMerchant.oldSliderPosition), RiskType.withName(seqMerchant.updatedSliderPosition), seqMerchant.approvalFlag)), GetMerchantErr("No merchant found for MerchantId: ${merchantId}"))
@@ -89,7 +89,7 @@ trait MerchantRiskScoreDetailTrait {
 
     def approvalFlag = column[String]("APPROVAL_FLAG")
 
-    def isActive = column[Boolean]("IS_ACTIVE")
+    def isActive = column[Int]("IS_MERCHANT_ACTIVE")
 
     def updateTimestamp = column[LocalDateTime]("UPDATED_TIMESTAMP")
 
