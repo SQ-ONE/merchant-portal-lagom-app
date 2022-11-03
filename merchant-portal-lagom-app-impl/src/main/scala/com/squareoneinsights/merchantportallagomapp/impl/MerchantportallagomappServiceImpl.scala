@@ -283,7 +283,7 @@ class MerchantportallagomappServiceImpl(
       }
   }
 
-  override def addRiskTypeNew(partnerId: Int, merchantId: String):
+  override def addRiskTypeNew():
   ServiceCall[MerchantRiskScoreReq, String] =
     ServerServiceCall { _ =>
     logger.info("Inside addRiskTypeNew")
