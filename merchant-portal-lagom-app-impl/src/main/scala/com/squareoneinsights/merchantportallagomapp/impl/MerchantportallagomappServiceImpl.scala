@@ -78,7 +78,7 @@ class MerchantportallagomappServiceImpl(
       }
     })
 
-   override def addRiskType(partnerId: Int, merchantId: String): ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
+   override def addRiskType(merchantId: String, partnerId: Int): ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
      authorize((tokenContent, _) =>
     ServerServiceCall { riskJson =>
       val resp = for {
