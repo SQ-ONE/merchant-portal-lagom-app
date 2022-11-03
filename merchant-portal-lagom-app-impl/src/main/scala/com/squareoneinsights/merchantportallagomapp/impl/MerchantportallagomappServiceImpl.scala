@@ -55,21 +55,15 @@ class MerchantportallagomappServiceImpl(
   val maxAgeInSeconds  = 36000
 
   override def hello(id: String): ServiceCall[NotUsed, String] = ServiceCall { _ =>
-    // Look up the sharded entity (aka the aggregate instance) for the given ID.
-    println("Fine.................")
-    // Ask the aggregate instance the Hello command.
-    import scala.concurrent._
     Future.successful("Ok....")
   }
-
 
  override def getRiskScore(merchantId: String, partnerId: Int): ServiceCall[NotUsed, MerchantRiskScoreResp] =
    authorize((tokenContent, _) =>
     ServerServiceCall { _ =>
-      println("Inside getRiskScore ****************************************--->")
       val getMerchantRisk = for {
-        b <- EitherT(merchantRiskScoreDetailRepo.fetchRiskScore(merchantId, partnerId))
-      } yield (b)
+        getMerchantRiskData    <- EitherT(merchantRiskScoreDetailRepo.fetchRiskScore(merchantId, partnerId))
+      } yield (getMerchantRiskData)
       getMerchantRisk.value.map {
         case Left(err) => {
           err match {
@@ -84,24 +78,12 @@ class MerchantportallagomappServiceImpl(
       }
     })
 
-  /*def getMerchantOnboardRiskData(merchantId: String): Future[Either[MerchantPortalError, MerchantRiskScoreResp]] = {
-    val getAndUpdateQuery = for {
-      onboardRiskScore <- EitherT(merchantOnboardRiskScore.getInitialRiskType(merchantId))
-      toRedis <- EitherT(merchantRiskScoreDetailRepo.insertRiskScore(MerchantRiskScoreReq.apply(merchantId, RiskType.withName(onboardRiskScore), RiskType.withName(onboardRiskScore))))
-      toKafka <- EitherT(kafkaProduceService.sendMessage(merchantId, RiskType.withName(onboardRiskScore), RiskType.withName(onboardRiskScore)))
-    } yield(MerchantRiskScoreResp.getMerchantObj(merchantId, onboardRiskScore))
-     getAndUpdateQuery.value
-  }
-*/
-
-
    override def addRiskType(partnerId: Int, merchantId: String): ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp] =
      authorize((tokenContent, _) =>
     ServerServiceCall { riskJson =>
       val resp = for {
-        toRedis <- EitherT(merchantRiskScoreDetailRepo.updateRiskScore(riskJson, partnerId, merchantId))
-        //toRdbms <- EitherT(addRiskToRedis.publishMerchantRiskType(riskJson.merchantId, riskJson.riskType))
-        toKafka <- EitherT(kafkaProduceService.sendMessage(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk, partnerId))
+        toRedis       <- EitherT(merchantRiskScoreDetailRepo.updateRiskScore(riskJson, partnerId, merchantId))
+        toKafka       <- EitherT(kafkaProduceService.sendMessage(riskJson.merchantId, riskJson.oldRisk, riskJson.updatedRisk, partnerId))
       } yield(toKafka)
       resp.value.map {
         case Left(err) => {
@@ -141,20 +123,13 @@ class MerchantportallagomappServiceImpl(
 
   override def login = ServerServiceCall{(requestHeader, userLoginDetails) =>
     val resp = for {
-      merchant <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName))
-      //  _ <- EitherT(WindowsADAuthenticator.authenticateUser(userLoginDetails.userName, userLoginDetails.password))
-      tokenContent <- EitherT.rightT(TokenContent(merchant.merchantId, merchant.merchantName))
-      jwt <- EitherT(
-        JwtTokenGenerator.createToken(tokenContent, new DateTime().plusMinutes(tokenValidityInMinutes).toDate)
-      )
-      _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
-      _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId, jwt.authToken))
-      jwtFreshToken <- EitherT(
-        JwtTokenGenerator.generateRefreshToken(tokenContent, new DateTime().plusMinutes(tokenValidityInMinutes).toDate)
-      )
-      _ <- EitherT(
-        redisUtility.addTokenToRedis(merchant.merchantId + "_refreshToken", jwtFreshToken.refreshToken.getOrElse(""))
-      )
+      merchant      <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName))
+      tokenContent  <- EitherT.rightT(TokenContent(merchant.merchantId, merchant.merchantName))
+      jwt           <- EitherT(JwtTokenGenerator.createToken(tokenContent, new DateTime().plusMinutes(tokenValidityInMinutes).toDate))
+                  _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
+                  _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId, jwt.authToken))
+      jwtFreshToken <- EitherT(JwtTokenGenerator.generateRefreshToken(tokenContent, new DateTime().plusMinutes(tokenValidityInMinutes).toDate))
+      _ <- EitherT(redisUtility.addTokenToRedis(merchant.merchantId + "_refreshToken", jwtFreshToken.refreshToken.getOrElse("")))
     } yield (merchant, jwt)
     val response = resp.value.map {
       case Left(err) => {
@@ -306,6 +281,13 @@ class MerchantportallagomappServiceImpl(
         case Left(err)   => throw BadRequest(s"Error: ${err}")
         case Right(data) => data
       }
+  }
+
+  override def addRiskTypeNew(partnerId: Int, merchantId: String):
+  ServiceCall[MerchantRiskScoreReq, String] =
+    ServerServiceCall { _ =>
+    logger.info("Inside addRiskTypeNew")
+    Future.successful("Working")
   }
 
 }

@@ -12,36 +12,47 @@
   import Service._
   named("merchant-portal-lagom-apps")
   .withCalls(
-  restCall(Method.GET,
+  restCall(
+    Method.GET,
     "/api/hello/:name", hello _),
-  restCall(Method.GET,
+  restCall(
+    Method.GET,
     "/api/v1/merchantportal/risksetting/merchant/:merchantId/partner/:partnerId", getRiskScore _),
-  restCall(Method.POST,
+  restCall(
+    Method.POST,
     "/api/v1/merchantportal/risksetting/merchant/:merchantId/partner/:partnerId", addRiskType _),
-  restCall(Method.GET,
+    restCall(
+      Method.PUT,
+      "/api/v1/merchantportal/risksetting/merchant/:merchantId/partner/:partnerId", addRiskTypeNew _),
+  restCall(
+    Method.GET,
     "/api/v1/merchantportal/merchant/business/merchantId/:merchantId/partner/:partnerId", getMerchantImpactData _),
-  restCall(Method.POST,
+  restCall(
+    Method.POST,
     "/api/v1/merchantportal/login", login),
-  restCall(Method.POST,
+  restCall(
+    Method.POST,
     "/api/v1/merchantportal/logout", logOut),
-  restCall(Method.GET,
+  restCall(
+    Method.GET,
     "/api/v1/merchantportal/getPartners", getPartner),
-
-  restCall(Method.POST,
+  restCall(
+    Method.POST,
     "/api/v1/merchantportal/logout", logOut),
-  restCall(Method.GET,
+  restCall(
+    Method.GET,
     "/api/v1/merchantportal/txn/:txnType/:merchantId/:partnerId", getTransactions _),
-  restCall(Method.POST,
+  restCall(
+    Method.POST,
     "/api/v1/merchantportal/search/:txnType/:merchantId/:partnerId", getTransactionsBySearch _),
   restCall(
-  Method.GET,
-  "/api/v1/merchantportal/search/list", getTxnSearchCriteriaList
-  ),
+    Method.GET,
+    "/api/v1/merchantportal/search/list", getTxnSearchCriteriaList),
   restCall(
-  Method.GET,
-  "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId", getTxnDetails _
+    Method.GET,
+    "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId", getTxnDetails _)
   )
-  ).withAutoAcl(true).withExceptionSerializer(new CommonExceptionSerializer)
+    .withAutoAcl(true).withExceptionSerializer(new CommonExceptionSerializer)
   }
 
   def hello(name: String
@@ -51,9 +62,9 @@
                    partnerId: Int
                   ): ServiceCall[NotUsed, MerchantRiskScoreResp]
 
-  def addRiskType(partnerId: Int,
-                  merchantId: String
-                  ): ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp]
+  def addRiskType(partnerId: Int, merchantId: String): ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp]
+
+  def addRiskTypeNew(partnerId: Int, merchantId: String): ServiceCall[MerchantRiskScoreReq, String]
 
   def getMerchantImpactData(merchantId: String,
                             partnerId: Int
