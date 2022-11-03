@@ -23,7 +23,7 @@
     "/api/v1/merchantportal/risksetting/merchant/:merchantId/partner/:partnerId", addRiskType _),
     restCall(
       Method.PUT,
-      "/api/v1/merchantportal/risksetting/merchant/partner", addRiskTypeNew _),
+      "/api/v1/merchantportal/risksetting/merchant/:merchantId/partner/:partnerId", addRiskTypeNew _),
   restCall(
     Method.GET,
     "/api/v1/merchantportal/merchant/business/merchantId/:merchantId/partner/:partnerId", getMerchantImpactData _),
@@ -64,7 +64,7 @@
 
   def addRiskType(partnerId: Int, merchantId: String): ServiceCall[MerchantRiskScoreReq, MerchantRiskScoreResp]
 
-  def addRiskTypeNew: ServiceCall[MerchantRiskScoreReq, String]
+  def addRiskTypeNew(partnerId: Int, merchantId: String): ServiceCall[MerchantRiskScoreReq, String]
 
   def getMerchantImpactData(merchantId: String,
                             partnerId: Int
