@@ -226,8 +226,8 @@ class MerchantportallagomappServiceImpl(
   ): ServiceCall[TransactionFilterReq, List[MerchantTransactionResp]] =
     authorize((tokenContent, _) =>
       ServerServiceCall { req =>
-        val request = req.filterCondition.map(x => FilterTXN(x.key, MerchantUtil.conditionMap(x.condition), x.value))
-        val resp = for {
+     val resp = for {
+          request <- EitherT.rightT( FilterTXN(MerchantUtil.filterColumn(req.filterCondition.key), MerchantUtil.conditionMap(req.filterCondition.condition), req.filterCondition.value))
           merchant <- EitherT(merchantTransactionRepo.getTransactionsBySearch(merchantId, txnType, request, partnerId))
         } yield merchant
         resp.value.map {

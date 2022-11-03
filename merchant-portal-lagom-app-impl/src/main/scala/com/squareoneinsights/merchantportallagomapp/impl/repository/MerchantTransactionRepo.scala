@@ -54,16 +54,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
       MerchantTxnErr(ex.getMessage).asLeft[Done]
     }
   }
-  def tailRecFilter(flt: List[FilterTXN]): String = {
-    @tailrec
-    def supportFilter(f: List[FilterTXN], acc: String): String = {
-      if (f.isEmpty) acc
-      else {
-        supportFilter(f.tail, acc.concat(s""" AND "${f.head.key}" ${f.head.condition} '${f.head.value}' """))
-      }
-    }
-    supportFilter(flt, "")
-  }
+
 
   implicit val getSupplierResult = GetResult(r =>
     MerchantTransactionResp(
@@ -82,14 +73,14 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   def getTransactionsBySearch(
       merchantId: String,
       txnType: String,
-      flt: List[FilterTXN],
+      obj: FilterTXN,
       partnerId: Int
   ): Future[Either[MerchantPortalError, Seq[MerchantTransactionResp]]] = {
 
     val sql = sql""" SELECT "TXN_ID","CASE_REF_NO","TXN_TIMESTAMP","TXN_AMOUNT","IFRM_VERDICT", "INVESTIGATION_STATUS",
                      "CHANNEL","TXN_TYPE","RESPONSE_CODE"
                    FROM "IFRM_LIST_LIMITS"."MERCHANT_TRANSACTION_DETAILS" WHERE
-                     "MERCHANT_ID" = '#$merchantId' AND "TXN_TYPE" = '#$txnType' #${tailRecFilter(flt)} AND "PARTNER_ID" = '$partnerId'
+                     "MERCHANT_ID" = '#$merchantId' AND "TXN_TYPE" = '#$txnType' AND "#${obj.key}" #${obj.condition} '#${obj.value}'  AND "PARTNER_ID" = '#$partnerId'
                      ORDER BY "TXN_TIMESTAMP" DESC
          """.as[MerchantTransactionResp]
 
@@ -100,11 +91,11 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   }
 
   def getTransactionDetails(
-      txnType: String,
-      txnId: String,
-      merchantId: String,
-      partnerId: Int
-  ): Future[Either[String, MerchantTransactionDetails]] = {
+                             txnType: String,
+                             txnId: String,
+                             merchantId: String,
+                             partnerId: Int
+                           ): Future[Either[String, MerchantTransactionDetails]] = {
     val query = merchantTransactionTable
       .filter { col =>
         (col.merchantId === merchantId && col.txnId === txnId && col.txnType === txnType && col.partnerId === partnerId)
@@ -123,46 +114,45 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
           )
         }
         fromOption.map { x =>
-          {
-            val txnDetails = TxnDetails(
-              x._1.channel,
-              x._1.customerId,
-              x._1.txnId,
-              x._1.txnAmount,
-              x._1.txnTimestamp.toString,
-              x._1.ifrmVerdict,
-              x._1.instrument,
-              x._1.location
-            )
+        {
+          val txnDetails = TxnDetails(
+            x._1.channel,
+            x._1.customerId,
+            x._1.txnId,
+            x._1.txnAmount,
+            x._1.txnTimestamp.toString,
+            x._1.ifrmVerdict,
+            x._1.instrument,
+            x._1.location
+          )
 
-            val caseDetails = CaseDetails(
-              x._1.txnResult,
-              x._1.violationDetails,
-              x._1.txnId,
-              x._1.txnAmount,
-              x._1.txnTimestamp.toString,
-              x._1.investigatorComment,
-              x._1.caseId: String
-            )
+          val caseDetails = CaseDetails(
+            x._1.txnResult,
+            x._1.violationDetails,
+            x._1.txnId,
+            x._1.txnAmount,
+            x._1.txnTimestamp.toString,
+            x._1.investigatorComment,
+            x._1.caseId: String
+          )
 
-            val logDetails = Logs(
-              x._2.logName,
-              x._2.logValue
-            )
+          val logDetails = Logs(
+            x._2.logName,
+            x._2.logValue
+          )
 
-            val caseLogDetails = (List() :+ logDetails)
-            MerchantTransactionDetails(txnDetails, caseDetails, caseLogDetails)
-          }
+          val caseLogDetails = (List() :+ logDetails)
+          MerchantTransactionDetails(txnDetails, caseDetails, caseLogDetails)
+        }
         }
       }
     db.run(query)
   }
-
 }
 
 trait MerchantTransactionLogTrait {
   class MerchantTransactionLogTable(tag: Tag)
-      extends Table[MerchantTransactionLog](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_TRANSACTION_LOG") {
+      extends Table[MerchantTransactionLog](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_TRANSACTION_LOGS") {
 
     def * = (id, txnId, logName, logValue) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
 
@@ -172,7 +162,7 @@ trait MerchantTransactionLogTrait {
 
     def logName = column[String]("LOG_NAME")
 
-    def logValue = column[String]("LOG_ID")
+    def logValue = column[String]("LOG_VALUE")
 
   }
 }
