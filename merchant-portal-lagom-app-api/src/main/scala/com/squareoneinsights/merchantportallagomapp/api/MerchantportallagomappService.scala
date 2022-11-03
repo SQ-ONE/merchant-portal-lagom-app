@@ -91,4 +91,3 @@
                     partnerId: Int
                     ): ServiceCall[NotUsed, MerchantTransactionDetails]
   }
-

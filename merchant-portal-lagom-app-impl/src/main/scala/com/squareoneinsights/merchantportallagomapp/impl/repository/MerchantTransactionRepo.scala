@@ -150,7 +150,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
               x._2.logValue
             )
 
-            val caseLogDetails = CaseLogDetails(List() :+ logDetails)
+            val caseLogDetails = (List() :+ logDetails)
             MerchantTransactionDetails(txnDetails, caseDetails, caseLogDetails)
           }
         }

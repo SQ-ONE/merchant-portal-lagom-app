@@ -255,18 +255,9 @@ class MerchantportallagomappServiceImpl(
 
   override def getTxnSearchCriteriaList(partnerId: Int): ServiceCall[NotUsed, MerchantTxnSearchCriteria] =
     ServerServiceCall { _ =>
-      Future(
-        MerchantTxnSearchCriteria(
-          "txnSearchCriteria",
-          List(
-            "CHANNEL",
-            "RESPONSE_CODE",
-            "TXN_AMOUNT",
-            "TXN_TIMESTAMP",
-            "TXN_TYPE"
-          )
-        )
-      )
+      val x = List("channel", "responseCode", "txnAmount", "txnTimestamp", "txnType")
+      val merchantResultList = MerchantTxnSearchCriteria.apply(x)
+      Future.successful(merchantResultList)
     }
 
   override def getTxnDetails(
