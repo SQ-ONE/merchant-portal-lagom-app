@@ -253,7 +253,7 @@ class MerchantportallagomappServiceImpl(
       }
     )
 
-  override def getTxnSearchCriteriaList: ServiceCall[NotUsed, MerchantTxnSearchCriteria] =
+  override def getTxnSearchCriteriaList(partnerId: Int): ServiceCall[NotUsed, MerchantTxnSearchCriteria] =
     ServerServiceCall { _ =>
       Future(
         MerchantTxnSearchCriteria(

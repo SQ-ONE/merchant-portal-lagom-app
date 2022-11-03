@@ -19,11 +19,8 @@
     Method.GET,
     "/api/v1/merchantportal/risksetting/merchant/:merchantId/partner/:partnerId", getRiskScore _),
   restCall(
-    Method.PUT,
+    Method.POST,
     "/api/v1/merchantportal/risksetting/merchant/:merchantId/partner/:partnerId", addRiskType _),
-    restCall(
-      Method.PUT,
-      "/api/v1/merchantportal/risksetting/merchantId/:merchantId/partner/:partnerId", addRiskTypeNew _),
   restCall(
     Method.GET,
     "/api/v1/merchantportal/merchant/business/merchantId/:merchantId/partner/:partnerId", getMerchantImpactData _),
@@ -47,7 +44,7 @@
     "/api/v1/merchantportal/search/:txnType/:merchantId/:partnerId", getTransactionsBySearch _),
   restCall(
     Method.GET,
-    "/api/v1/merchantportal/search/list", getTxnSearchCriteriaList),
+    "/api/v1/merchantportal/search/list/:partnerId", getTxnSearchCriteriaList _),
   restCall(
     Method.GET,
     "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId", getTxnDetails _)
@@ -86,7 +83,7 @@
                               partnerId: Int
                               ): ServiceCall[TransactionFilterReq, List[MerchantTransactionResp]]
 
-  def getTxnSearchCriteriaList: ServiceCall[NotUsed, MerchantTxnSearchCriteria]
+  def getTxnSearchCriteriaList(partnerId: Int): ServiceCall[NotUsed, MerchantTxnSearchCriteria]
 
   def getTxnDetails(txnType: String,
                     txnId: String,
