@@ -70,6 +70,11 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
     )
   )
 
+  def getFilter(filterTXN: FilterTXN): String = filterTXN.key match {
+     case "TXN_TIMESTAMP" => s"""AND "TXN_TIMESTAMP" >= '${filterTXN.value} 00:00:00.000' AND "TXN_TIMESTAMP" <= '${filterTXN.value} 23:59:59.900'"""
+     case _ => s"""AND "#${filterTXN.key}" #${filterTXN.condition} '#${filterTXN.value}' """
+   }
+
   def getTransactionsBySearch(
       merchantId: String,
       txnType: String,
@@ -80,7 +85,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
     val sql = sql""" SELECT "TXN_ID","CASE_REF_NO","TXN_TIMESTAMP","TXN_AMOUNT","IFRM_VERDICT", "INVESTIGATION_STATUS",
                      "CHANNEL","TXN_TYPE","RESPONSE_CODE"
                    FROM "IFRM_LIST_LIMITS"."MERCHANT_TRANSACTION_DETAILS" WHERE
-                     "MERCHANT_ID" = '#$merchantId' AND "TXN_TYPE" = '#$txnType' AND "#${obj.key}" #${obj.condition} '#${obj.value}'  AND "PARTNER_ID" = '#$partnerId'
+                     "MERCHANT_ID" = '#$merchantId' AND "TXN_TYPE" = '#$txnType' #${getFilter(obj)}  AND "PARTNER_ID" = '#$partnerId'
                      ORDER BY "TXN_TIMESTAMP" DESC
          """.as[MerchantTransactionResp]
 
