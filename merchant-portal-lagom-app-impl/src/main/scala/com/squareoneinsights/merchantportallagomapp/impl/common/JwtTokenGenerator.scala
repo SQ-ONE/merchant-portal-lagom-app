@@ -1,49 +1,88 @@
 package com.squareoneinsights.merchantportallagomapp.impl.common
 
 import cats.syntax.either._
+import com.nimbusds.jose.JWSHeader
+import com.nimbusds.jose.crypto.MACSigner
+import com.nimbusds.jose.jwk.OctetSequenceKey
+import com.nimbusds.jwt.{JWTClaimsSet, JWTParser, SignedJWT}
 import com.typesafe.config.{ConfigFactory, ConfigRenderOptions}
 import play.api.libs.json.{Format, Json}
-import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim, JwtJson}
-import scala.concurrent.{ExecutionContext, Future}
+import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtJson}
+import com.nimbusds.jose.JWSAlgorithm.HS256
+import java.util.{Date, UUID}
+import scala.concurrent.Future
 import scala.util.Try
+import scala.concurrent.ExecutionContext.Implicits._
 
 object JwtTokenGenerator {
+  private val config = ConfigFactory.load()
+  private val list = config.getConfigList("pac4j.lagom.jwt.authenticator.signatures")
+  private val s = list.get(0).getObject("jwk").render(ConfigRenderOptions.concise())
+  private val secret = config.getString("jwt.encryption.key")
 
-  val config = ConfigFactory.load()
-  val secret = config.getString("jwt.encryption.key")
-  val authExpiration = ConfigFactory.load().getInt("jwt.token.auth.expirationInSeconds")
-  val refreshExpiration = ConfigFactory.load().getInt("jwt.token.refresh.expirationInSeconds")
-  val algorithm = JwtAlgorithm.HS256
+  val refreshTokenExp: Int = config.getInt("jwt.token.refresh.expirationInSeconds")
 
 
-  def createToken(content: TokenContent)(implicit format: Format[TokenContent],
-                                                           ec: ExecutionContext):
-  Future[Either[String, Token]] = Future {
-    Either.fromTry(Try(generateTokens(content))).leftMap {
-      case ex: Throwable => ex.getMessage
+  def createToken(content: TokenContent, date:Date)(implicit format: Format[TokenContent]):
+  Future[Either[MerchantPortalError, Token]] = Future {
+    Either.fromTry(Try(generate(content, date))).leftMap {
+      case ex: Throwable =>  CreateLogInTokenErr("Failed to create login token")
     }
   }
 
-  def generateTokens(content: TokenContent)(implicit format: Format[TokenContent]): Token = {
-    val authClaim = JwtClaim(Json.toJson(content).toString())
-      .expiresIn(authExpiration)
-      .issuedNow
 
-    val refreshClaim = JwtClaim(Json.toJson(content.copy(isRefreshToken = true)).toString())
-      .expiresIn(refreshExpiration)
-      .issuedNow
+  def generate(content: TokenContent, expiryDate: Date)(implicit format: Format[TokenContent]) = {
 
-    val authToken = JwtJson.encode(authClaim, secret, algorithm)
-    val refreshToken = JwtJson.encode(refreshClaim, secret, algorithm)
+    val user = new JWTClaimsSet.Builder()
+      .issuer("https://pac4j.org")
+      .subject(content.merchantId)
+      .claim("merchantId", content.merchantId)
+      .claim("merchantName", content.merchantName)
+      .issueTime(new Date)
+      .expirationTime(expiryDate)
+      .jwtID(UUID.randomUUID.toString)
+      .build
 
-    Token(
-      authToken = authToken,
-      refreshToken = refreshToken
-    )
+    val octetSequenceKey: OctetSequenceKey = OctetSequenceKey.parse(s)
+    val jwsHeader = new JWSHeader(HS256)
+    val signedJWT = new SignedJWT(jwsHeader, user)
+    signedJWT.sign(new MACSigner(octetSequenceKey))
+    Token(signedJWT.serialize())
   }
+
+
+
+    def generateRefreshToken(content: TokenContent, expiryDate: Date)(implicit format: Format[TokenContent]) =
+      Future {
+        Either.fromTry(Try({
+          val userRefresh = new JWTClaimsSet.Builder()
+            .issuer("https://squareoneinsights.com")
+            .subject(content.merchantId)
+            .claim("merchantId", content.merchantId)
+            .claim("merchantName", content.merchantName)
+            .claim("userName", content.merchantId)
+            .claim("isRefreshToken", true)
+            .jwtID(UUID.randomUUID.toString)
+            .build
+
+          val refreshClaim = JwtClaim(userRefresh.toString())
+            .expiresIn(refreshTokenExp)
+            .issuedNow
+
+          val refreshToken = JwtJson.encode(refreshClaim, secret, JwtAlgorithm.HS256)
+
+          Token(
+            authToken = "",
+            refreshToken = Some(refreshToken)
+          )
+        })).leftMap {
+          case ex: Throwable => CreateLogInTokenErr("Failed to create login token")
+        }
+      }
+
 }
 
-case class TokenContent(merchantId:String,merchantName:String, isRefreshToken: Boolean = false)
+case class TokenContent(merchantId:String, merchantName:String, isRefreshToken: Boolean = false)
 
 object TokenContent {
 
@@ -51,8 +90,10 @@ object TokenContent {
 
 }
 
-case class Token(authToken: String, refreshToken:String = "")
+case class Token(authToken: String, refreshToken: Option[String] = None)
 
 object Token {
   implicit val format: Format[Token] = Json.format
 }
+
+

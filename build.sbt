@@ -42,11 +42,11 @@ val circeCore    = "io.circe" %% "circe-core"    % "0.14.1"
 val circeGeneric = "io.circe" %% "circe-generic" % "0.14.1"
 val circeParser  = "io.circe" %% "circe-parser"  % "0.14.1"
 val kafkaClient =  "org.apache.kafka" % "kafka-clients" % "0.10.0.0"
+
 //val debeziumApi = "io.debezium" % "debezium-api" % "1.9.5.Final"
 //val debeziumDep = "io.debezium" % "debezium-connector-postgres" % "1.9.5.Final"
 //val debeziumEmb = "io.debezium" % "debezium-embedded" % "1.9.5.Final"
-
-
+val playJsonDerivedCodecs = "org.julienrf" %% "play-json-derived-codecs" % "4.0.0"
 
 
 
@@ -92,8 +92,11 @@ lazy val `merchant-portal-lagom-app-impl` = (project in file("merchant-portal-la
       akkaDiscoveryKubernetesApi,
       jwt,
       pac4jJwt,
-      nimbusJoseJwt
-    )
+      nimbusJoseJwt,
+      playJsonDerivedCodecs,
+      lagomPac4j,
+      pac4jHttp
+   )
   )
   .settings(lagomForkedTestSettings)
   .dependsOn(`merchant-portal-lagom-app-api`)

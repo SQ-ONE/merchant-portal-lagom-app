@@ -1,7 +1,10 @@
 package com.squareoneinsights.merchantportallagomapp.impl.repository
 
+import akka.Done
+import cats.data.EitherT
 import cats.implicits._
 import com.squareoneinsights.merchantportallagomapp.api.request.BusinessImpactDetail
+import com.squareoneinsights.merchantportallagomapp.impl.common.{AddBusinessImpactErr, CheckRiskScoreExist, GetBusinessImpactErr, MerchantPortalError, UpdateBusinessImpactErr}
 import slick.jdbc.PostgresProfile.api._
 
 import java.time.LocalDateTime
@@ -13,18 +16,51 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
   //val logger: Logger = LoggerFactory.getLogger(BusinessImpactRepo)
   val businessImpactTable = TableQuery[BusinessImpactTable]
 
-  def fetchBusinessDetail(merchantId: String): Future[Either[String, BusinessImpactDetail]] = {
+  def fetchBusinessDetail(merchantId: String, partnerId: Int): Future[Either[MerchantPortalError, BusinessImpactDetail]] = {
     println("fetchBusinessDetail.............")
-    val businessImpact = businessImpactTable.filter(col => (col.merchantId === merchantId))
+    val businessImpact = businessImpactTable.filter(col => (col.merchantId === merchantId && col.partnerId === partnerId))
     db.run(businessImpact.result).map { x =>
-      Either.fromOption(x.headOption, s"No Business Impact found for merchantId: ${merchantId}")
+      Either.fromOption(x.headOption, GetBusinessImpactErr(s"No Business Impact found for merchantId: ${merchantId}"))
     }
   }
 
-  def save(businessImpactDetail: BusinessImpactDetail) = {
+  def save(businessImpactDetail: BusinessImpactDetail): Future[Either[MerchantPortalError, Done]] = {
     println("save.............")
+    val insertOrSave = for {
+       checkFlag <- EitherT(checkFlag(businessImpactDetail.merchantId))
+       finalOperation <- EitherT(if(checkFlag) update(businessImpactDetail) else insert(businessImpactDetail))
+    } yield(finalOperation)
+    insertOrSave.value
+  }
+
+  def insert(businessImpactDetail: BusinessImpactDetail): Future[Either[MerchantPortalError, Done]] = {
+    println("insert business.............")
     val query = businessImpactTable += businessImpactDetail
-    db.run(query).map(x => x.asRight[String])
+    db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover {
+      case ex => AddBusinessImpactErr(ex.getMessage).asLeft[Done]
+    }
+  }
+
+  def update(businessImpactDetail: BusinessImpactDetail): Future[Either[MerchantPortalError, Done]] = {
+    println("updated business.............")
+    import businessImpactDetail._
+    val query = businessImpactTable.filter(_.merchantId === merchantId).map(col => (col.lowPaymentAllowed, col.lowPaymentReview, col.lowPaymentBlocked, col.medPaymentAllowed, col.medPaymentReview, col.medPaymentBlocked, col.highPaymentAllowed, col.highPaymentReview, col.highPaymentBlocked, col.updatedTimeStamp))
+      .update(lowPaymentAllowed, lowPaymentReview, lowPaymentBlocked, medPaymentAllowed, medPaymentReview, medPaymentBlocked, highPaymentAllowed, highPaymentReview, highPaymentBlocked, updatedTimeStamp)
+    db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover {
+      case ex => UpdateBusinessImpactErr(ex.getMessage).asLeft[Done]
+    }
+  }
+
+  def checkFlag(merchantId: String): Future[Either[MerchantPortalError, Boolean]] = {
+    val containsBay = for {
+      m <- businessImpactTable
+      if m.merchantId like s"%${merchantId}%"
+    } yield m
+    val bayMentioned = containsBay.exists.result
+    db.run(bayMentioned)
+      .map(value => value.asRight[MerchantPortalError]).recover {
+      case ex => CheckRiskScoreExist(ex.toString).asLeft[Boolean]
+    }
   }
 }
 

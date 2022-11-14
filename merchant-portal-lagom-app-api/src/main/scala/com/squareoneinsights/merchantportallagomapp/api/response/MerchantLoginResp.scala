@@ -3,6 +3,8 @@ package com.squareoneinsights.merchantportallagomapp.api.response
 import play.api.libs.json.{Format, Json}
 
 case class MerchantLoginResp(merchantId:String,
+                             partnerId: Int,
+                             userName:String,
                              merchantName:String,
                              mccCode:String,
                              isLoginActive:Boolean)

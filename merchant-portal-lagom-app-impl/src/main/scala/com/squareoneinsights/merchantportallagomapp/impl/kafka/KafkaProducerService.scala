@@ -8,8 +8,8 @@ import akka.kafka.scaladsl.Producer
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import cats.implicits.catsSyntaxEitherId
-import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantRiskScoreProducer, RiskScoreReq}
-import com.squareoneinsights.merchantportallagomapp.impl.common.JsonSerializer
+import com.squareoneinsights.merchantportallagomapp.api.request.{MerchantRiskScoreProducer, RiskScoreReq, RiskType}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{JsonSerializer, MerchantPortalError, RiskSettingProducerErr}
 import com.typesafe.config.ConfigFactory
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.kafka.common.serialization.StringSerializer
@@ -33,14 +33,14 @@ class KafkaProduceService {
       .withBootstrapServers(broker)
   }
 
-  def sendMessage(merchantId: String, oldRiskListType: String, updatedListType: String): Future[Either[String, Done]] = {
+  def sendMessage(merchantId: String, oldRiskListType: RiskType.Value, updatedListType: RiskType.Value, partnerId: Int): Future[Either[MerchantPortalError, Done]] = {
     println("Inside sendMessage.......")
     val producerSet = configureKafkaProducer.createKafkaProducer()
-    val riskScoreReq = MerchantRiskScoreProducer.apply(merchantId, oldRiskListType, updatedListType)
+    val riskScoreReq = MerchantRiskScoreProducer.apply(partnerId, merchantId, oldRiskListType, updatedListType)
     val source = List(new ProducerRecord[String, MerchantRiskScoreProducer](topicName, riskScoreReq))
     val q: Future[Done] = Source(source)
       .runWith(Producer.plainSink(configureKafkaProducer, producerSet))
     println("Inside producer.......")
-    q.map(_.asRight[String])
+    q.map(_.asRight[RiskSettingProducerErr])
   }
 }

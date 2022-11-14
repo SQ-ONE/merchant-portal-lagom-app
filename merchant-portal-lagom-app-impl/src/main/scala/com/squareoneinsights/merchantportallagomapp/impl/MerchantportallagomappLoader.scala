@@ -11,9 +11,12 @@ import com.lightbend.lagom.scaladsl.playjson.JsonSerializerRegistry
 import com.softwaremill.macwire._
 import com.squareoneinsights.merchantportallagomapp.impl.common.RedisUtility
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.{KafkaConsumeBusinessImpact, KafkaConsumeService, KafkaProduceService}
-import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo}
+import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo, MerchantTransactionRepo, PartnerInfoRepo}
+import com.typesafe.config.ConfigFactory
 import play.api.db.{ConnectionPool, HikariCPComponents}
 import play.api.db.evolutions.EvolutionsComponents
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
 
 class MerchantportallagomappLoader extends LagomApplicationLoader {
 
@@ -33,7 +36,6 @@ abstract class MerchantportallagomappDevApplication(context: LagomApplicationCon
     with EvolutionsComponents
     with AhcWSComponents
     with HikariCPComponents {
-
   override lazy val lagomServer: LagomServer = serverFor[MerchantportallagomappService](wire[MerchantportallagomappServiceImpl])
   override lazy val jsonSerializerRegistry: JsonSerializerRegistry = MerchantportallagomappSerializerRegistry
   lazy val merchantRiskScoreDetailRepo = wire[MerchantRiskScoreDetailRepo]
@@ -41,7 +43,9 @@ abstract class MerchantportallagomappDevApplication(context: LagomApplicationCon
   lazy val businessImpactRepo = wire[BusinessImpactRepo]
   lazy val merchantOnboardRiskScore = wire[MerchantOnboardRiskScore]
   lazy val merchantLoginRepo = wire[MerchantLoginRepo]
+  lazy val partnerInfo = wire[PartnerInfoRepo]
   lazy val redisUtility = wire[RedisUtility]
+  lazy val merchantTransactionRepo = wire[MerchantTransactionRepo]
  wire[KafkaConsumeBusinessImpact]
 }
 
@@ -52,7 +56,6 @@ abstract class MerchantportallagomappApplication(context: LagomApplicationContex
     with EvolutionsComponents
     with AhcWSComponents
     with HikariCPComponents {
-
   override lazy val lagomServer: LagomServer = serverFor[MerchantportallagomappService](wire[MerchantportallagomappServiceImpl])
   override lazy val jsonSerializerRegistry: JsonSerializerRegistry = MerchantportallagomappSerializerRegistry
   lazy val merchantRiskScoreDetailRepo = wire[MerchantRiskScoreDetailRepo]
@@ -61,5 +64,7 @@ abstract class MerchantportallagomappApplication(context: LagomApplicationContex
   lazy val merchantOnboardRiskScore = wire[MerchantOnboardRiskScore]
   lazy val merchantLoginRepo = wire[MerchantLoginRepo]
   lazy val redisUtility = wire[RedisUtility]
+  lazy val partnerInfo = wire[PartnerInfoRepo]
+  lazy val merchantTransactionRepo = wire[MerchantTransactionRepo]
   wire[KafkaConsumeBusinessImpact]
 }
