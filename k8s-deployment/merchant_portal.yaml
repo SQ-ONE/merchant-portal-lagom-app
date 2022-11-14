@@ -35,7 +35,7 @@ spec:
             initialDelaySeconds: 20
           env:
             - name: JAVA_OPTS
-              value: "-Xms2560m -Xmx5120m -Dconfig.resource=production.conf"
+              value: "-Xms256m -Xmx512m -Dconfig.resource=production.conf"
             - name: APPLICATION_SECRET
               valueFrom:
                 secretKeyRef:
@@ -58,7 +58,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: myproject-cm
-
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 0.25
+              memory: 512Mi
 ---
 apiVersion: v1
 kind: Service
