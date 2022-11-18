@@ -42,7 +42,7 @@ spec:
                   name: ifrm-re-application-secret
                   key: secret
             - name: postgres_URL
-              value: "jdbc:postgresql://postgresserver.myproject.svc.cluster.local:5432/ifrm_acq"
+              value: "jdbc:postgresql://postgresserver.myproject.svc.cluster.local:5432/merchant_portal"
             - name: postgres_USERNAME
               valueFrom:
                 secretKeyRef:
