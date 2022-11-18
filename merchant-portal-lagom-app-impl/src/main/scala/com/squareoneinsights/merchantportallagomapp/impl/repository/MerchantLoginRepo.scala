@@ -74,7 +74,7 @@ class MerchantLoginRepo(db: Database)
 
 trait MerchantLoginTrait {
 
-  class MerchantLoginTable(tag: Tag) extends Table[MerchantLogin](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_LOGIN") {
+  class MerchantLoginTable(tag: Tag) extends Table[MerchantLogin](tag, _schemaName = Option("MERCHANT_PORTAL_RISK"), "MERCHANT_LOGIN") {
 
     def * = (id, merchantId, partnerId, merchantName, isMerchantActive, isLoggedInFlag) <> ((MerchantLogin.apply _).tupled, MerchantLogin.unapply)
 

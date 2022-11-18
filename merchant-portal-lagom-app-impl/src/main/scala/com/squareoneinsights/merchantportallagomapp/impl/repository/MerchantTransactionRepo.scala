@@ -162,7 +162,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
 
 trait MerchantTransactionLogTrait {
   class MerchantTransactionLogTable(tag: Tag)
-      extends Table[MerchantTransactionLog](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_TRANSACTION_LOG") {
+      extends Table[MerchantTransactionLog](tag, _schemaName = Option("MERCHANT_PORTAL_ALERT_TRANSACTION"), "MERCHANT_TRANSACTION_LOG") {
 
     def * = (id, txnId, logName, logValue) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
 
@@ -182,7 +182,7 @@ trait MerchantTransactionTrait {
   class MerchantTransactionTable(tag: Tag)
       extends Table[MerchantTransaction](
         tag,
-        _schemaName = Option("IFRM_LIST_LIMITS"),
+        _schemaName = Option("MERCHANT_PORTAL_ALERT_TRANSACTION"),
         "MERCHANT_TRANSACTION_DETAILS"
       ) {
 

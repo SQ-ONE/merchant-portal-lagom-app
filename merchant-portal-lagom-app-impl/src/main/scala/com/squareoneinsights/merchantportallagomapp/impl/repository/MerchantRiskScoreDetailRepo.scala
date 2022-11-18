@@ -83,7 +83,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
 
 trait MerchantRiskScoreDetailTrait {
 
-  class MerchantRiskScoreDetailTable(tag: Tag) extends Table[MerchantRiskScore](tag, _schemaName = Option("IFRM_LIST_LIMITS") ,"MERCHANT_RISK_SETTING") {
+  class MerchantRiskScoreDetailTable(tag: Tag) extends Table[MerchantRiskScore](tag, _schemaName = Option("MERCHANT_PORTAL_RISK") ,"MERCHANT_RISK_SETTING") {
 
     def * = (requestId, merchantId, oldSliderPosition, updatedSliderPosition, approvalFlag) <> ((MerchantRiskScore.apply _).tupled, MerchantRiskScore.unapply)
 

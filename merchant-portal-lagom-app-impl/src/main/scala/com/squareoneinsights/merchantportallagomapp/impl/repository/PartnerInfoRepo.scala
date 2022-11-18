@@ -27,7 +27,7 @@ class PartnerInfoRepo(db: Database)
 
 trait PartnerInfoTrait {
 
-  class PartnerInfoTable(tag: Tag) extends Table[PartnerInfo](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "PARTNER_DETAIL") {
+  class PartnerInfoTable(tag: Tag) extends Table[PartnerInfo](tag, _schemaName = Option("MERCHANT_PORTAL_RISK"), "PARTNER_DETAIL") {
 
     def * = (partnerId, name) <> ((PartnerInfo.apply _).tupled, PartnerInfo.unapply)
 

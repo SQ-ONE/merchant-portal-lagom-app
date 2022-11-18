@@ -18,7 +18,7 @@ data:
   JWT_TOKEN_REFRESH_EXPIRATOIN_IN_SECONDS: "86400"
   IFRM_KAFKA_BOOTSTRAP_SERVERS: _tcp-clients._tcp.my-cluster-kafka-brokers.myproject.svc.cluster.local:9092
   KAFKA_URL: _tcp-clients._tcp.my-cluster-kafka-brokers.myproject.svc.cluster.local:9092
-  postgres_URL: jdbc:postgresql://postgresserver.myproject.svc.cluster.local:5432/ifrm_acq
+  postgres_URL: jdbc:postgresql://postgresserver.myproject.svc.cluster.local:5432/merchant_portal
   postgres_USERNAME: ifrm
   postgres_PASSWORD: ifrm
   WINDOWS_AD_DOMAIN_NAME: '@in.ril.com'
