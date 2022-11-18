@@ -22,10 +22,8 @@ import com.squareoneinsights.merchantportallagomapp.api.request.MerchantLoginReq
 import com.squareoneinsights.merchantportallagomapp.api.request.MerchantRiskScoreReq
 import com.squareoneinsights.merchantportallagomapp.api.request.RiskType
 import com.squareoneinsights.merchantportallagomapp.api.request.TransactionFilterReq
-import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransactionDetails, MerchantTransactionResp, MerchantTxnSearchCriteria, PartnerInfo, ResponseMessage}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransactionDetails, MerchantTransactionResp, MerchantTxnSearchCriteria, PartnerInfo, ResponseMessage, TxnSearchCriteria}
 import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, FailedToGetPartner, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, MerchantTxnErr, Pac4jAuthorizer, RedisUtility, RiskSettingProducerErr, TokenContent, UpdateLogInRedisErr, UpdatedRiskErr}
-import com.squareoneinsights.merchantportallagomapp.api.response.MerchantLoginResp
-import com.squareoneinsights.merchantportallagomapp.api.response.MerchantRiskScoreResp
 import com.squareoneinsights.merchantportallagomapp.impl.MerchantportallagomappServiceImpl.tokenValidityInMinutes
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, FilterTXN, MerchantLoginRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo, MerchantTransactionRepo, PartnerInfoRepo}
@@ -226,8 +224,8 @@ class MerchantportallagomappServiceImpl(
   ): ServiceCall[TransactionFilterReq, List[MerchantTransactionResp]] =
     authorize((tokenContent, _) =>
       ServerServiceCall { req =>
-        val request = req.filterCondition.map(x => FilterTXN(x.key, MerchantUtil.conditionMap(x.condition), x.value))
-        val resp = for {
+     val resp = for {
+          request <- EitherT.rightT( FilterTXN(MerchantUtil.filterColumn(req.filterCondition.key), MerchantUtil.conditionMap(req.filterCondition.condition), req.filterCondition.value))
           merchant <- EitherT(merchantTransactionRepo.getTransactionsBySearch(merchantId, txnType, request, partnerId))
         } yield merchant
         resp.value.map {
@@ -255,8 +253,13 @@ class MerchantportallagomappServiceImpl(
 
   override def getTxnSearchCriteriaList(partnerId: Int): ServiceCall[NotUsed, MerchantTxnSearchCriteria] =
     ServerServiceCall { _ =>
-      val x = List("channel", "responseCode", "txnAmount", "txnTimestamp", "txnType")
-      val merchantResultList = MerchantTxnSearchCriteria.apply(x)
+      val x =  List(TxnSearchCriteria("channel", "Channel"),
+        TxnSearchCriteria("responseCode","Response Code"),
+          TxnSearchCriteria("txnAmount","Transaction Amount"),
+        TxnSearchCriteria("txnTimestamp","Transaction Date"),
+        TxnSearchCriteria("txnType","Transaction Type")
+      )
+      val merchantResultList = MerchantTxnSearchCriteria(x)
       Future.successful(merchantResultList)
     }
 

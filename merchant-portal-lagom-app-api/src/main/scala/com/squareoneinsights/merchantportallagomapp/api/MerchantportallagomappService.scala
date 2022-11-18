@@ -41,13 +41,13 @@
     "/api/v1/merchantportal/txn/:txnType/:merchantId/:partnerId", getTransactions _),
   restCall(
     Method.POST,
-    "/api/v1/merchantportal/search/:txnType/:merchantId/:partnerId", getTransactionsBySearch _),
+    "/api/v1/merchantportal/txn/:txnType/:merchantId/:partnerId", getTransactionsBySearch _),
   restCall(
     Method.GET,
     "/api/v1/merchantportal/search/list/:partnerId", getTxnSearchCriteriaList _),
   restCall(
     Method.GET,
-    "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId", getTxnDetails _)
+    "/api/v1/merchantportal/txn/:txnType/:txnId/:merchantId/:partnerId", getTxnDetails _)
   )
     .withAutoAcl(true).withExceptionSerializer(new CommonExceptionSerializer)
   }

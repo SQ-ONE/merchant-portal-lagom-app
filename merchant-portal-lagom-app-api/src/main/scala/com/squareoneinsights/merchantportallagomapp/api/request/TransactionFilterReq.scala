@@ -2,7 +2,7 @@ package com.squareoneinsights.merchantportallagomapp.api.request
 
 import play.api.libs.json.{Format, Json}
 
-case class TransactionFilterReq(filterCondition: List[TransactionFilter])
+case class TransactionFilterReq(filterCondition: TransactionFilter)
 
 case class TransactionFilter(key: String, condition: String, value: String)
 
