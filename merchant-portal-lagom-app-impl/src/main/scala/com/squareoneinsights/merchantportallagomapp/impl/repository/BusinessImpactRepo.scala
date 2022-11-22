@@ -27,7 +27,7 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
   def save(businessImpactDetail: BusinessImpactDetail): Future[Either[MerchantPortalError, Done]] = {
     println("save.............")
     val insertOrSave = for {
-       checkFlag <- EitherT(checkFlag(businessImpactDetail.merchantId))
+       checkFlag <- EitherT(checkFlag(businessImpactDetail.merchantId, businessImpactDetail.partnerId))
        finalOperation <- EitherT(if(checkFlag) update(businessImpactDetail) else insert(businessImpactDetail))
     } yield(finalOperation)
     insertOrSave.value
@@ -51,10 +51,9 @@ class BusinessImpactRepo(db: Database)(implicit ec: ExecutionContext) extends Bu
     }
   }
 
-  def checkFlag(merchantId: String): Future[Either[MerchantPortalError, Boolean]] = {
+  def checkFlag(merchantId: String, partnerId: Int): Future[Either[MerchantPortalError, Boolean]] = {
     val containsBay = for {
-      m <- businessImpactTable
-      if m.merchantId like s"%${merchantId}%"
+      m <- businessImpactTable.filter(row => (row.partnerId === partnerId && row.merchantId === merchantId))
     } yield m
     val bayMentioned = containsBay.exists.result
     db.run(bayMentioned)
