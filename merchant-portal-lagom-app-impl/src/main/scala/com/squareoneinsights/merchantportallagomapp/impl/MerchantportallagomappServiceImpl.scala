@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory
 class MerchantportallagomappServiceImpl(
                                         merchantRiskScoreDetailRepo: MerchantRiskScoreDetailRepo,
                                         kafkaProduceService: KafkaProduceService,
-                                        merchantOnboardRiskScore: MerchantOnboardRiskScore,
                                         businessImpactRepo: BusinessImpactRepo,
                                         merchantLoginRepo: MerchantLoginRepo,
                                         merchantTransactionRepo: MerchantTransactionRepo,
