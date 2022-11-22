@@ -19,7 +19,7 @@ class PartnerInfoRepo(db: Database)
         seq => PartnerInfo(seq.id, seq.partnerName)
       }
     }.map(value => value.asRight[MerchantPortalError]).recover {
-      case ex => FailedToGetPartner("Table doesn't exist or failure db query").asLeft[Seq[PartnerInfo]]
+      case ex => FailedToGetPartner("Database connection error or Table doesn't exist").asLeft[Seq[PartnerInfo]]
     }
   }
 
