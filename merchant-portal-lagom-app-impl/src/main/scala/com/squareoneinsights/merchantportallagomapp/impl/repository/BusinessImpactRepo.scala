@@ -75,23 +75,23 @@ trait BusinessImpactTrait {
 
     def merchantId = column[String]("MERCHANT_ID" , O.PrimaryKey)
 
-    def lowPaymentAllowed = column[Int]("LOW_PAYMENTS_ALLOWED")
+    def lowPaymentAllowed = column[Double]("LOW_PAYMENTS_ALLOWED")
 
-    def lowPaymentReview = column[Int]("LOW_PAYMENTS_REVIEW")
+    def lowPaymentReview = column[Double]("LOW_PAYMENTS_REVIEW")
 
-    def lowPaymentBlocked = column[Int]("LOW_PAYMENTS_BLOCKED")
+    def lowPaymentBlocked = column[Double]("LOW_PAYMENTS_BLOCKED")
 
-    def medPaymentAllowed = column[Int]("MED_PAYMENTS_ALLOWED")
+    def medPaymentAllowed = column[Double]("MED_PAYMENTS_ALLOWED")
 
-    def medPaymentReview = column[Int]("MED_PAYMENTS_REVIEW")
+    def medPaymentReview = column[Double]("MED_PAYMENTS_REVIEW")
 
-    def medPaymentBlocked = column[Int]("MED_PAYMENTS_BLOCKED")
+    def medPaymentBlocked = column[Double]("MED_PAYMENTS_BLOCKED")
 
-    def highPaymentAllowed = column[Int]("HIGH_PAYMENTS_ALLOWED")
+    def highPaymentAllowed = column[Double]("HIGH_PAYMENTS_ALLOWED")
 
-    def highPaymentReview = column[Int]("HIGH_PAYMENTS_REVIEW")
+    def highPaymentReview = column[Double]("HIGH_PAYMENTS_REVIEW")
 
-    def highPaymentBlocked = column[Int]("HIGH_PAYMENTS_BLOCKED")
+    def highPaymentBlocked = column[Double]("HIGH_PAYMENTS_BLOCKED")
 
     def updatedTimeStamp = column[LocalDateTime]("UPDATED_AT")
   }

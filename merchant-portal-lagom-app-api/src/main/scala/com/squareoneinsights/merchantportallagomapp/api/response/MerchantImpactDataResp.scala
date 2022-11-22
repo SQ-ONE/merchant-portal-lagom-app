@@ -16,7 +16,7 @@ object MerchantImpactDataResp {
   }
 }
 
-case class PaymentType(paymentAllow: Int, paymentInReview: Int, paymentBlock: Int)
+case class PaymentType(paymentAllow: Double, paymentInReview: Double, paymentBlock: Double)
 
 object PaymentType {
 

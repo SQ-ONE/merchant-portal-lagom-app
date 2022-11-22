@@ -6,15 +6,15 @@ import java.time.LocalDateTime
 
 case class BusinessImpactDetail(partnerId: Int,
                                 merchantId: String,
-                                lowPaymentAllowed: Int,
-                                lowPaymentReview: Int,
-                                lowPaymentBlocked: Int,
-                                medPaymentAllowed: Int,
-                                medPaymentReview: Int,
-                                medPaymentBlocked: Int,
-                                highPaymentAllowed: Int,
-                                highPaymentReview: Int,
-                                highPaymentBlocked: Int,
+                                lowPaymentAllowed: Double,
+                                lowPaymentReview: Double,
+                                lowPaymentBlocked: Double,
+                                medPaymentAllowed: Double,
+                                medPaymentReview: Double,
+                                medPaymentBlocked: Double,
+                                highPaymentAllowed: Double,
+                                highPaymentReview: Double,
+                                highPaymentBlocked: Double,
                                 updatedTimeStamp: LocalDateTime)
 
 object BusinessImpactDetail {
