@@ -44,7 +44,7 @@ class MerchantLoginRepo(db: Database)
       .map { _ =>
         Done.asRight[UpdateLogInRedisErr]
       }.recover {
-      case ex => UpdateLogInRedisErr("Failed to updated login detail").asLeft[Done]
+      case ex => UpdateLogInRedisErr("Failed to update login detail").asLeft[Done]
     }
   }
 
@@ -95,7 +95,7 @@ trait MerchantLoginTrait {
 
 trait MerchantLoginActivityTrait  {
 
-  class MerchantLoginActivityTable(tag: Tag) extends Table[MerchantLoginActivity](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT_LOGIN_ACTIVITY") {
+  class MerchantLoginActivityTable(tag: Tag) extends Table[MerchantLoginActivity](tag, _schemaName = Option("MERCHANT_PORTAL_RISK"), "MERCHANT_LOGIN_ACTIVITY") {
 
     def * = (activityId, merchantId, partnerId, loginTime, logOutTime) <> ((MerchantLoginActivity.apply _).tupled, MerchantLoginActivity.unapply)
 
@@ -115,7 +115,7 @@ trait MerchantLoginActivityTrait  {
 
 trait MerchantTrait {
 
-  class MerchantTable(tag: Tag) extends Table[Merchant](tag, _schemaName = Option("IFRM_LIST_LIMITS"), "MERCHANT") {
+  class MerchantTable(tag: Tag) extends Table[Merchant](tag, _schemaName = Option("MERCHANT_PORTAL_RISK"), "MERCHANT") {
 
     def * = (merchantId , merchantMcc) <> ((Merchant.apply _).tupled, Merchant.unapply)
 
