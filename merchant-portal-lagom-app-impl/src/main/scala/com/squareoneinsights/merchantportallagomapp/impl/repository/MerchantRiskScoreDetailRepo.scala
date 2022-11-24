@@ -21,7 +21,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
 
 
   def checkInitialRiskSet: Future[Either[String, Seq[MerchantRiskScore]]] = {
-    val selectQuery = merchantRiskScoreDetailTable.filter(col => (col.updateTimestamp === col.createTimeStamp && col.isActive === 1))
+    val selectQuery = merchantRiskScoreDetailTable.filter(col => (col.isInsert === 1 && col.isActive === 1))
      db.run(selectQuery.result.asTry).map { resultSet =>
       Either.fromTry(resultSet).leftMap(_ => "Failed to get initial risk type")
     }
@@ -30,8 +30,8 @@ class MerchantRiskScoreDetailRepo(db: Database)
     logger.info("Inside updateRiskScore---->"+riskScoreReq)
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
     val update = merchantRiskScoreDetailTable.filter(col => (col.merchantId === merchantId && col.partnerId === partnerId))
-      .map(row => (row.oldSliderPosition, row.updatedSliderPosition, row.approvalFlag, row.updateTimestamp))
-      .update(riskScoreReq.oldRisk.toString, riskScoreReq.updatedRisk.toString, approvalFlag, Some(LocalDateTime.now()))
+      .map(row => (row.oldSliderPosition, row.updatedSliderPosition, row.approvalFlag, row.updateTimestamp, row.isInsert))
+      .update(riskScoreReq.oldRisk.toString, riskScoreReq.updatedRisk.toString, approvalFlag, Some(LocalDateTime.now()), 0)
     db.run(update).map { _ =>
       Done.asRight[MerchantPortalError]
     }.recover {
@@ -91,7 +91,7 @@ trait MerchantRiskScoreDetailTrait {
 
   class MerchantRiskScoreDetailTable(tag: Tag) extends Table[MerchantRiskScore](tag, _schemaName = Option("MERCHANT_PORTAL_RISK") ,"MERCHANT_RISK_SETTING") {
 
-    def * = (requestId, partnerId, merchantId, oldSliderPosition, updatedSliderPosition, approvalFlag) <> ((MerchantRiskScore.apply _).tupled, MerchantRiskScore.unapply)
+    def * = (requestId, partnerId, merchantId, oldSliderPosition, updatedSliderPosition, approvalFlag, isInsert) <> ((MerchantRiskScore.apply _).tupled, MerchantRiskScore.unapply)
 
     def requestId = column[Int]("REQUEST_ID", O.AutoInc, O.Unique)
 
@@ -112,5 +112,7 @@ trait MerchantRiskScoreDetailTrait {
     def createTimeStamp = column[Option[LocalDateTime]]("CREATE_TIMESTAMP")
 
     def listType = column[String]("MERCHANT_RISK_TYPE")
+
+    def isInsert = column[Int]("IS_INSERTE")
   }
 }
