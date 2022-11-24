@@ -113,6 +113,6 @@ trait MerchantRiskScoreDetailTrait {
 
     def listType = column[String]("MERCHANT_RISK_TYPE")
 
-    def isInsert = column[Int]("IS_INSERTE")
+    def isInsert = column[Int]("IS_INSERTED")
   }
 }
