@@ -19,6 +19,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.lightbend.lagom.scaladsl.api.transport.BadRequest
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantRiskScore
 
 class KafkaProduceService {
   implicit val sys = ActorSystem("MyTest")
@@ -42,5 +44,11 @@ class KafkaProduceService {
       .runWith(Producer.plainSink(configureKafkaProducer, producerSet))
     println("Inside producer.......")
     q.map(_.asRight[RiskSettingProducerErr])
+  }
+
+  def senderMessagesQueue(mRisk: Seq[MerchantRiskScore]): Seq[Future[Either[MerchantPortalError, Done]]] = {
+    mRisk.map { message =>
+      sendMessage(message.merchantId, RiskType.withName(message.oldSliderPosition), RiskType.withName(message.updatedSliderPosition), message.partnerId)
+    }
   }
 }

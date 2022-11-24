@@ -1,5 +1,6 @@
 package com.squareoneinsights.merchantportallagomapp.impl
 
+import akka.actor.ActorRef
 import com.lightbend.lagom.scaladsl.akka.discovery.{AkkaDiscoveryComponents, AkkaDiscoveryServiceLocator}
 import com.lightbend.lagom.scaladsl.server._
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
@@ -9,9 +10,12 @@ import play.api.libs.ws.ahc.AhcWSComponents
 import com.squareoneinsights.merchantportallagomapp.api.MerchantportallagomappService
 import com.lightbend.lagom.scaladsl.playjson.JsonSerializerRegistry
 import com.softwaremill.macwire._
+import com.softwaremill.macwire.akkasupport.wireActor
+import com.softwaremill.tagging.{@@, Tagger}
 import com.squareoneinsights.merchantportallagomapp.impl.common.RedisUtility
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.{KafkaConsumeBusinessImpact, KafkaConsumeService, KafkaProduceService}
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo, MerchantTransactionRepo, PartnerInfoRepo}
+import com.squareoneinsights.merchantportallagomapp.impl.util.UpdateRiskToIfrmActor
 import com.typesafe.config.ConfigFactory
 import play.api.db.{ConnectionPool, HikariCPComponents}
 import play.api.db.evolutions.EvolutionsComponents
@@ -46,7 +50,9 @@ abstract class MerchantportallagomappDevApplication(context: LagomApplicationCon
   lazy val partnerInfo = wire[PartnerInfoRepo]
   lazy val redisUtility = wire[RedisUtility]
   lazy val merchantTransactionRepo = wire[MerchantTransactionRepo]
- wire[KafkaConsumeBusinessImpact]
+  lazy val updateRiskToIfrmActor: ActorRef @@ UpdateRiskToIfrmActor =
+    wireActor[UpdateRiskToIfrmActor]("UpdateRiskToIfrmActor").taggedWith[UpdateRiskToIfrmActor]
+  wire[KafkaConsumeBusinessImpact]
 }
 
 abstract class MerchantportallagomappApplication(context: LagomApplicationContext)
@@ -66,5 +72,7 @@ abstract class MerchantportallagomappApplication(context: LagomApplicationContex
   lazy val redisUtility = wire[RedisUtility]
   lazy val partnerInfo = wire[PartnerInfoRepo]
   lazy val merchantTransactionRepo = wire[MerchantTransactionRepo]
+  lazy val updateRiskToIfrmActor: ActorRef @@ UpdateRiskToIfrmActor =
+    wireActor[UpdateRiskToIfrmActor]("UpdateRiskToIfrmActor").taggedWith[UpdateRiskToIfrmActor]
   wire[KafkaConsumeBusinessImpact]
 }

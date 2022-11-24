@@ -19,7 +19,13 @@ class MerchantRiskScoreDetailRepo(db: Database)
 
   private val merchantRiskScoreDetailTable = TableQuery[MerchantRiskScoreDetailTable]
 
-  //val db = Database.forConfig("postgreDBProfile")
+
+  def checkInitialRiskSet: Future[Either[String, Seq[MerchantRiskScore]]] = {
+    val selectQuery = merchantRiskScoreDetailTable.filter(col => (col.updateTimestamp === col.createTimeStamp && col.isActive === 1))
+     db.run(selectQuery.result.asTry).map { resultSet =>
+      Either.fromTry(resultSet).leftMap(_ => "Failed to get initial risk type")
+    }
+  }
   def updateRiskScore(riskScoreReq: MerchantRiskScoreReq, partnerId: Int, merchantId: String): Future[Either[MerchantPortalError, Done]] = {
     logger.info("Inside updateRiskScore---->"+riskScoreReq)
     val approvalFlag = if(riskScoreReq.updatedRisk == "High") "Approve" else "Approve"
@@ -85,7 +91,7 @@ trait MerchantRiskScoreDetailTrait {
 
   class MerchantRiskScoreDetailTable(tag: Tag) extends Table[MerchantRiskScore](tag, _schemaName = Option("MERCHANT_PORTAL_RISK") ,"MERCHANT_RISK_SETTING") {
 
-    def * = (requestId, merchantId, oldSliderPosition, updatedSliderPosition, approvalFlag) <> ((MerchantRiskScore.apply _).tupled, MerchantRiskScore.unapply)
+    def * = (requestId, partnerId, merchantId, oldSliderPosition, updatedSliderPosition, approvalFlag) <> ((MerchantRiskScore.apply _).tupled, MerchantRiskScore.unapply)
 
     def requestId = column[Int]("REQUEST_ID", O.AutoInc, O.Unique)
 
