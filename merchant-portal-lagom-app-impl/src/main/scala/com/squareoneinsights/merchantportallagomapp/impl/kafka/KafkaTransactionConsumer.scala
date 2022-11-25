@@ -33,10 +33,12 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
   private final val stringDeserializer = new StringDeserializer
   private final val conf               = ConfigFactory.load()
   private val groupId                  = UUID.randomUUID().toString
-  private val topic                    = conf.getString("merchant.portal.business.kafka.consume.topic")
+  private val topic                    = conf.getString("merchant.portal.transaction.kafka.consume.topic")
+  private val kafkaBootstrapServers = conf.getString("merchant.portal.transaction.kafka.consumer-url")
   println(s"Inside KafkaConsumeBusinessImpact.................")
   val createConsumerConfig = {
     ConsumerSettings(system, stringDeserializer, stringDeserializer)
+      .withBootstrapServers(kafkaBootstrapServers)
       .withGroupId(groupId)
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
       .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
