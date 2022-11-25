@@ -7,6 +7,9 @@ import akka.kafka.ConsumerSettings
 import akka.kafka.Subscriptions
 import akka.stream.scaladsl.Sink
 import akka.stream.scaladsl.Source
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseCloser
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseData
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseNotation
 import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransaction
 import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransactionKafka
 import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransactionLog
@@ -48,48 +51,54 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
     Try(Json.parse(stringDeserializer.deserialize(topic, message.getBytes())).as[MerchantTransactions]) match {
       case Success(transactions) =>
         transactions match {
-          case MerchantTransactionKafka(
-                partnerId,
-                merchantId,
-                txnId,
-                caseRefNo,
-                txnTimestamp,
-                txnAmount,
-                ifrmVerdict,
-                investigationStatus,
-                channel,
-                txnType,
-                responseCode,
-                customerId,
-                instrument,
-                location,
-                txnResult,
-                violationDetails,
-                investigatorComment,
-                caseId
+          case MerchantCaseData(
+                partnerId: Int,
+                merchantId: String,
+                txnId: String,
+                caseRefNo: String,
+                txnTimestamp: String,
+                txnAmount: Int,
+                ifrmVerdict: String,
+                investigationStatus: String,
+                channel: String,
+                alertTypeId: String,
+                responseCode: String,
+                customerId: String, // entityId
+                txnType: String,    // instrument
+                lat: Double,
+                long: Double,
+                txnResult: String,
+                violationDetails: String,
+                investigatorComment: String,
+                caseId: String
               ) =>
             repo.saveTransaction(
               MerchantTransaction(
-                partnerId,
-                merchantId,
-                txnId,
-                caseRefNo,
-                Timestamp.valueOf(txnTimestamp),
-                txnAmount,
-                ifrmVerdict,
-                investigationStatus,
-                channel,
-                txnType,
-                responseCode,
-                customerId,
-                instrument,
-                location,
-                txnResult,
-                violationDetails,
-                investigatorComment,
-                caseId
+                partnerId: Int,
+                merchantId: String,
+                txnId: String,
+                caseRefNo: String,
+                Timestamp.valueOf(txnTimestamp): Timestamp,
+                txnAmount: Int,
+                ifrmVerdict: String,
+                investigationStatus: String,
+                channel: String,
+                txnType: String,
+                responseCode: String,
+                customerId: String,
+                txnType: String,
+                s"$lat, $long": String,
+                txnResult: String,
+                violationDetails: String,
+                investigatorComment: String,
+                caseId: String
               )
             )
+
+          case MerchantCaseCloser(caseRefNo, investigationStatus) =>
+            repo.updateByCaseRefNo(MerchantCaseCloser(caseRefNo, investigationStatus))
+          case MerchantCaseNotation(caseId, comment) => repo.updateByCaseId(MerchantCaseNotation(caseId, comment))
+
           case MerchantTransactionLogKafka(txnId, logName, logValue) =>
             repo.saveTransactionLog(MerchantTransactionLog(None, txnId, logName, logValue))
         }
