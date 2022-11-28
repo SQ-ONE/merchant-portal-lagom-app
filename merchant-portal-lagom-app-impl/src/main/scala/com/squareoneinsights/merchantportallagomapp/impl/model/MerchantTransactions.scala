@@ -7,8 +7,6 @@ import play.api.libs.json.OFormat
 
 import java.sql.Timestamp
 
-sealed trait MerchantTransactions
-
 case class MerchantTransaction(
     partnerId: Int,
     merchantId: String,
@@ -32,73 +30,34 @@ case class MerchantTransaction(
 
 case class MerchantTransactionLog(id: Option[Int], txnId: String, logName: String, logValue: String)
 
-case class MerchantTransactionKafka(
-    partnerId: Int,
-    merchantId: String,
-    txnId: String,
-    caseRefNo: String,
-    txnTimestamp: String,
-    txnAmount: Int,
-    ifrmVerdict: String,
-    investigationStatus: String,
-    channel: String,
-    txnType: String,
-    responseCode: String,
-    customerId: String,
-    instrument: String,
-    location: String,
-    txnResult: String,
-    violationDetails: String,
-    investigatorComment: String,
-    caseId: String
-) //extends MerchantTransactions
+sealed trait MerchantTransactionEvent
 
-case class MerchantTransactionLogKafka(txnId: String, logName: String, logValue: String) extends MerchantTransactions
+case class MerchantCaseUpdated(caseRefNo:String, investigationStatus:String) extends MerchantTransactionEvent
 
-object MerchantTransactions {
-  implicit val format: Format[MerchantTransactions] = derived.oformat[MerchantTransactions]()
+case class MerchantCaseCreated(   partnerId: Int,
+                                  merchantId: String,
+                                  txnId: String,
+                                  caseRefNo: String,
+                                  txnTimestamp: String,
+                                  txnAmount: Int,
+                                  ifrmVerdict: String,
+                                  caseStatus: String,
+                                  channel: String,
+                                  alertType: String,
+                                  responseCode: String,
+                                  customerId: String,  // entityId
+                                  txnType: String,  // instrument
+                                  lat: Double,
+                                  long:Double,
+                                  txnResult: String,
+                                  violationDetails: String,
+                                  investigatorComment: String,
+                                  caseId: Int
+                              ) extends MerchantTransactionEvent
 
-}
 
-object MerchantTransactionKafka {
-
-  implicit val format: Format[MerchantTransactionKafka] = Json.format[MerchantTransactionKafka]
-}
-
-object MerchantTransactionLogKafka {
-
-  implicit val format: Format[MerchantTransactionLogKafka] = Json.format
-}
-
-case class MerchantCaseCloser(caseRefNo: String, investigationStatus: String) extends MerchantTransactions
-
-case class MerchantCaseNotation(caseId: Int, comment: String) extends MerchantTransactions
-
-case class MerchantCaseData(
-    partnerId: Int,
-    merchantId: String,
-    txnId: String,
-    caseRefNo: String,
-    txnTimestamp: String,
-    txnAmount: Int,
-    ifrmVerdict: String,
-    investigationStatus: String,
-    channel: String,
-    alertTypeId: String,
-    responseCode: String,
-    customerId: String, // entityId
-    txnType: String,    // instrument
-    lat: Double,
-    long: Double,
-    txnResult: String,
-    violationDetails: String,
-    investigatorComment: String,
-    caseId: String
-) extends MerchantTransactions
-
-object MerchantCaseData {
-  implicit val format: Format[MerchantTransactions]                      = derived.oformat()
-  implicit val merchantCaseDataFormat: OFormat[MerchantCaseData]         = Json.format[MerchantCaseData]
-  implicit val merchantCaseCloserFormat: OFormat[MerchantCaseCloser]     = Json.format[MerchantCaseCloser]
-  implicit val merchantCaseNotationFormat: OFormat[MerchantCaseNotation] = Json.format[MerchantCaseNotation]
+object MerchantTransactionEvent {
+  implicit val format: Format[MerchantTransactionEvent]                      = derived.oformat()
+  implicit val merchantCaseDataFormat: OFormat[MerchantCaseUpdated]         = Json.format[MerchantCaseUpdated]
+  implicit val merchantCaseCloserFormat: OFormat[MerchantCaseCreated]     = Json.format[MerchantCaseCreated]
 }

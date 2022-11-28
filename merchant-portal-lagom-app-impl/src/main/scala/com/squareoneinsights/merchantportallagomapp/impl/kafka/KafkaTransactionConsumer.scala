@@ -7,19 +7,15 @@ import akka.kafka.ConsumerSettings
 import akka.kafka.Subscriptions
 import akka.stream.scaladsl.Sink
 import akka.stream.scaladsl.Source
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseCloser
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseData
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseNotation
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransaction
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransactionKafka
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransactionLog
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransactionLogKafka
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransactions
+import com.lightbend.lagom.scaladsl.api.transport.BadRequest
+import com.squareoneinsights.merchantportallagomapp.impl.model.{MerchantCaseCreated, MerchantCaseUpdated, MerchantTransaction, MerchantTransactionEvent}
 import com.squareoneinsights.merchantportallagomapp.impl.repository.MerchantTransactionRepo
+import com.squareoneinsights.merchantportallagomapp.impl.util.MerchantUtil
 import com.typesafe.config.ConfigFactory
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import play.api.libs.json.Json
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.sql.Timestamp
 import scala.concurrent.duration.DurationInt
@@ -35,7 +31,8 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
   private val groupId                  = UUID.randomUUID().toString
   private val topic                    = conf.getString("merchant.portal.transaction.kafka.consume.topic")
   private val kafkaBootstrapServers = conf.getString("merchant.portal.transaction.kafka.consumer-url")
-  println(s"Inside KafkaConsumeBusinessImpact.................")
+  println(groupId + "  transaction iddd")
+  println(s"Inside KafkaConsumerTransactionAndLog.................")
   val createConsumerConfig = {
     ConsumerSettings(system, stringDeserializer, stringDeserializer)
       .withBootstrapServers(kafkaBootstrapServers)
@@ -50,30 +47,43 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
 
   x.map(consumerMsg => {
     val message = consumerMsg.record.value()
-    Try(Json.parse(stringDeserializer.deserialize(topic, message.getBytes())).as[MerchantTransactions]) match {
+    Try(Json.parse(stringDeserializer.deserialize(topic, message.getBytes())).as[MerchantTransactionEvent]) match {
       case Success(transactions) =>
         transactions match {
-          case MerchantCaseData(
-                partnerId: Int,
-                merchantId: String,
-                txnId: String,
-                caseRefNo: String,
-                txnTimestamp: String,
-                txnAmount: Int,
-                ifrmVerdict: String,
-                investigationStatus: String,
-                channel: String,
-                alertTypeId: String,
-                responseCode: String,
-                customerId: String, // entityId
+          case x:MerchantCaseUpdated =>
+            println("data  ----"+x)
+            repo.updateByCaseRefNo(x)
+              .map {
+                case Left(err) => {
+                  println(s"Inside KafkaTransactionConsumer Left.................err: $err")
+                }
+                case Right(value) => {
+                  println(s"Inside KafkaTransactionConsumer Right................."+value)
+                  value
+                }
+              }
+          case MerchantCaseCreated(
+                partnerId,
+                merchantId,
+                txnId,
+                caseRefNo,
+                txnTimestamp,
+                txnAmount,
+                ifrmVerdict,
+                caseStatus,
+                channel,
+                alertType,
+                responseCode,
+                customerId, // entityId
                 txnType: String,    // instrument
                 lat: Double,
                 long: Double,
                 txnResult: String,
-                violationDetails: String,
+                violationDetails,
                 investigatorComment: String,
-                caseId: String
+                caseId
               ) =>
+            println("data "+alertType)
             repo.saveTransaction(
               MerchantTransaction(
                 partnerId: Int,
@@ -83,26 +93,30 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
                 Timestamp.valueOf(txnTimestamp): Timestamp,
                 txnAmount: Int,
                 ifrmVerdict: String,
-                investigationStatus: String,
-                channel: String,
-                txnType: String,
-                responseCode: String,
-                customerId: String,
-                txnType: String,
-                s"$lat, $long": String,
-                txnResult: String,
-                violationDetails: String,
-                investigatorComment: String,
-                caseId: String
+                caseStatus,
+                channel,
+                alertType,
+                responseCode,
+                customerId,
+                txnType,
+                MerchantUtil.findLocation(lat, long),
+                txnResult,
+                violationDetails,
+                investigatorComment,
+                caseId.toString
               )
-            )
+            ) .map {
+              case Left(err) => {
+                println(s"Inside KafkaTransactionConsumer Left.................err: $err")
+              }
+              case Right(value) => {
+                println(s"Inside KafkaTransactionConsumer Right................."+value)
+                value
+              }
+            }
 
-          case MerchantCaseCloser(caseRefNo, investigationStatus) =>
-            repo.updateByCaseRefNo(MerchantCaseCloser(caseRefNo, investigationStatus))
-          case MerchantCaseNotation(caseId, comment) => repo.updateByCaseId(MerchantCaseNotation(caseId, comment))
-
-          case MerchantTransactionLogKafka(txnId, logName, logValue) =>
-            repo.saveTransactionLog(MerchantTransactionLog(None, txnId, logName, logValue))
+          case _ =>
+            println("Invalid message body " + message)
         }
       case Failure(exception) => println("Invalid message body " + message, exception)
     }

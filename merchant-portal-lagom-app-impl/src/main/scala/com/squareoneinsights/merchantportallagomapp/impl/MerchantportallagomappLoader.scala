@@ -13,7 +13,7 @@ import com.softwaremill.macwire._
 import com.softwaremill.macwire.akkasupport.wireActor
 import com.softwaremill.tagging.{@@, Tagger}
 import com.squareoneinsights.merchantportallagomapp.impl.common.RedisUtility
-import com.squareoneinsights.merchantportallagomapp.impl.kafka.{KafkaConsumeBusinessImpact, KafkaConsumeService, KafkaProduceService}
+import com.squareoneinsights.merchantportallagomapp.impl.kafka.{KafkaConsumeBusinessImpact, KafkaConsumeService, KafkaProduceService, KafkaTransactionConsumer}
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, MerchantLoginRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo, MerchantTransactionRepo, PartnerInfoRepo}
 import com.squareoneinsights.merchantportallagomapp.impl.util.{InitialMerchantRiskSetJob, UpdateRiskToIfrmActor}
 import com.typesafe.config.ConfigFactory
@@ -52,6 +52,7 @@ abstract class MerchantportallagomappDevApplication(context: LagomApplicationCon
   lazy val merchantTransactionRepo = wire[MerchantTransactionRepo]
   lazy val updateRiskToIfrmActor: ActorRef @@ UpdateRiskToIfrmActor =
     wireActor[UpdateRiskToIfrmActor]("UpdateRiskToIfrmActor").taggedWith[UpdateRiskToIfrmActor]
+  wire[KafkaTransactionConsumer]
   wire[KafkaConsumeBusinessImpact]
   wire[InitialMerchantRiskSetJob]
 }
@@ -75,6 +76,8 @@ abstract class MerchantportallagomappApplication(context: LagomApplicationContex
   lazy val merchantTransactionRepo = wire[MerchantTransactionRepo]
   lazy val updateRiskToIfrmActor: ActorRef @@ UpdateRiskToIfrmActor =
     wireActor[UpdateRiskToIfrmActor]("UpdateRiskToIfrmActor").taggedWith[UpdateRiskToIfrmActor]
+  wire[KafkaTransactionConsumer]
   wire[KafkaConsumeBusinessImpact]
   wire[InitialMerchantRiskSetJob]
+
 }

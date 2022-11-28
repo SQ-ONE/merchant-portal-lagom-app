@@ -6,10 +6,7 @@ import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantTransactionResp
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantPortalError
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantTxnErr
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseCloser
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseNotation
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransaction
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransactionLog
+import com.squareoneinsights.merchantportallagomapp.impl.model.{MerchantCaseUpdated, MerchantTransaction, MerchantTransactionLog}
 import slick.jdbc.GetResult
 
 import java.sql.Timestamp
@@ -42,6 +39,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
       }
     db.run(query)
   }
+
   def saveTransaction(merchantTxn: MerchantTransaction): Future[Either[MerchantPortalError, Done]] = {
     val query = merchantTransactionTable += merchantTxn
     db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
@@ -49,21 +47,11 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
     }
   }
 
-  def updateByCaseRefNo(merchantCaseCloser: MerchantCaseCloser): Future[Either[MerchantPortalError, Done]] = {
+  def updateByCaseRefNo(merchantCaseCloser: MerchantCaseUpdated): Future[Either[MerchantPortalError, Done]] = {
     val query = merchantTransactionTable
       .filter(_.caseRefNo === merchantCaseCloser.caseRefNo)
       .map(_.investigationStatus)
       .update(merchantCaseCloser.investigationStatus)
-    db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
-      MerchantTxnErr(ex.getMessage).asLeft[Done]
-    }
-  }
-
-  def updateByCaseId(merchantCaseNotation: MerchantCaseNotation): Future[Either[MerchantPortalError, Done]] = {
-    val query = merchantTransactionTable
-      .filter(_.caseId === merchantCaseNotation.caseId.toString)
-      .map(_.investigatorComment)
-      .update(merchantCaseNotation.comment)
     db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
       MerchantTxnErr(ex.getMessage).asLeft[Done]
     }
