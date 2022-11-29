@@ -31,7 +31,6 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
   private val groupId                  = UUID.randomUUID().toString
   private val topic                    = conf.getString("merchant.portal.transaction.kafka.consume.topic")
   private val kafkaBootstrapServers = conf.getString("merchant.portal.transaction.kafka.consumer-url")
-  println(groupId + "  transaction iddd")
   println(s"Inside KafkaConsumerTransactionAndLog.................")
   val createConsumerConfig = {
     ConsumerSettings(system, stringDeserializer, stringDeserializer)
@@ -103,7 +102,7 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
                 txnResult,
                 violationDetails,
                 investigatorComment,
-                caseId.toString
+                caseId
               )
             ) .map {
               case Left(err) => {

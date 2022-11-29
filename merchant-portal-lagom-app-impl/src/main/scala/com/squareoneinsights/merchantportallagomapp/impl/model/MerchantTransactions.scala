@@ -41,7 +41,7 @@ case class MerchantCaseCreated(   partnerId: Int,
                                   txnTimestamp: String,
                                   txnAmount: Int,
                                   ifrmVerdict: String,
-                                  caseStatus: String,
+                                  investigationStatus: String,
                                   channel: String,
                                   alertType: String,
                                   responseCode: String,
@@ -52,7 +52,7 @@ case class MerchantCaseCreated(   partnerId: Int,
                                   txnResult: String,
                                   violationDetails: String,
                                   investigatorComment: String,
-                                  caseId: Int
+                                  caseId: String
                               ) extends MerchantTransactionEvent
 
 
