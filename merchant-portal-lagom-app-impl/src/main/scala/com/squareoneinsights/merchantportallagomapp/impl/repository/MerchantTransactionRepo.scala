@@ -6,7 +6,9 @@ import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantTransactionResp
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantPortalError
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantTxnErr
-import com.squareoneinsights.merchantportallagomapp.impl.model.{MerchantCaseUpdated, MerchantTransaction, MerchantTransactionLog}
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseUpdated
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransaction
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransactionLog
 import slick.jdbc.GetResult
 
 import java.sql.Timestamp
@@ -41,7 +43,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   }
 
   def saveTransaction(merchantTxn: MerchantTransaction): Future[Either[MerchantPortalError, Done]] = {
-    val query = merchantTransactionTable += merchantTxn
+    val query = merchantTransactionTable.insertOrUpdate(merchantTxn)
     db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
       MerchantTxnErr(ex.getMessage).asLeft[Done]
     }
