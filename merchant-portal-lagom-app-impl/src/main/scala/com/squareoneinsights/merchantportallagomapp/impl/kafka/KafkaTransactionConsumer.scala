@@ -8,15 +8,15 @@ import akka.kafka.Subscriptions
 import akka.stream.scaladsl.Sink
 import akka.stream.scaladsl.Source
 import com.lightbend.lagom.scaladsl.api.transport.BadRequest
-import com.squareoneinsights.merchantportallagomapp.impl.model.{MerchantCaseCreated, MerchantCaseUpdated, MerchantTransaction, MerchantTransactionEvent}
+import com.squareoneinsights.merchantportallagomapp.impl.model.{LogCreated, MerchantCaseCreated, MerchantCaseUpdated, MerchantTransaction, MerchantTransactionEvent}
 import com.squareoneinsights.merchantportallagomapp.impl.repository.MerchantTransactionRepo
 import com.squareoneinsights.merchantportallagomapp.impl.util.MerchantUtil
 import com.typesafe.config.ConfigFactory
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import play.api.libs.json.Json
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import java.sql.Timestamp
 import scala.concurrent.duration.DurationInt
 import java.util.UUID
@@ -50,7 +50,6 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
       case Success(transactions) =>
         transactions match {
           case x:MerchantCaseUpdated =>
-            println("data  ----"+x)
             repo.updateByCaseRefNo(x)
               .map {
                 case Left(err) => {
@@ -82,7 +81,6 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
                 investigatorComment: String,
                 caseId
               ) =>
-            println("data "+alertType)
             repo.saveTransaction(
               MerchantTransaction(
                 partnerId: Int,
@@ -113,6 +111,18 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
                 value
               }
             }
+          case x:LogCreated =>
+            println("data  ----"+x)
+            repo.insertCaseLogs(x)
+              .map {
+                case Left(err) => {
+                  println(s"Inside KafkaTransactionConsumer Left.................err: $err")
+                }
+                case Right(value) => {
+                  println(s"Inside KafkaTransactionConsumer Right................."+value)
+                  value
+                }
+              }
 
           case _ =>
             println("Invalid message body " + message)

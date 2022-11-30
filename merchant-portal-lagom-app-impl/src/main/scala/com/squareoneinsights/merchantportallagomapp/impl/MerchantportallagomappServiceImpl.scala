@@ -22,7 +22,7 @@ import com.squareoneinsights.merchantportallagomapp.api.request.MerchantLoginReq
 import com.squareoneinsights.merchantportallagomapp.api.request.MerchantRiskScoreReq
 import com.squareoneinsights.merchantportallagomapp.api.request.RiskType
 import com.squareoneinsights.merchantportallagomapp.api.request.TransactionFilterReq
-import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransactionDetails, MerchantTransactionResp, MerchantTxnSearchCriteria, PartnerInfo, ResponseMessage, TxnSearchCriteria}
+import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, Logs, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransactionDetails, MerchantTransactionResp, MerchantTxnSearchCriteria, PartnerInfo, ResponseMessage, TxnSearchCriteria}
 import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, FailedToGetPartner, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, MerchantTxnErr, Pac4jAuthorizer, RedisUtility, RiskSettingProducerErr, TokenContent, UpdateLogInRedisErr, UpdatedRiskErr}
 import com.squareoneinsights.merchantportallagomapp.impl.MerchantportallagomappServiceImpl.tokenValidityInMinutes
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
@@ -268,9 +268,12 @@ class MerchantportallagomappServiceImpl(
       merchantId: String,
       partnerId: Int
   ): ServiceCall[NotUsed, MerchantTransactionDetails] = ServerServiceCall { _ =>
-    merchantTransactionRepo
-      .getTransactionDetails(txnType, txnId, merchantId, partnerId)
-      .map {
+    val resp =for {
+    transactionDetails <-  EitherT(merchantTransactionRepo.getTransactionDetails(txnType, txnId, merchantId, partnerId))
+    logsData <- EitherT(merchantTransactionRepo.getLogs(transactionDetails.caseDetails.caseId))
+    } yield (transactionDetails.copy(caseLogDetails = logsData.map(data => Logs(data._1,data._2)).toList))
+
+    resp.value.map {
         case Left(err)   => throw BadRequest(s"Error: ${err}")
         case Right(data) => data
       }

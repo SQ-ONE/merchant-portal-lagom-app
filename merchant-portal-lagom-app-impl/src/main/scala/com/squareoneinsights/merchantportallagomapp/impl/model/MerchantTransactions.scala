@@ -28,11 +28,11 @@ case class MerchantTransaction(
     caseId: String
 )
 
-case class MerchantTransactionLog(id: Option[Int], txnId: String, logName: String, logValue: String)
+case class MerchantTransactionLog( caseId: String, logName: String, logValue: String)
 
 sealed trait MerchantTransactionEvent
 
-case class MerchantCaseUpdated(caseRefNo:String, investigationStatus:String) extends MerchantTransactionEvent
+case class MerchantCaseUpdated(caseRefNo:String, investigationStatus:String, txnResult:String, investigatorComment:Option[String]) extends MerchantTransactionEvent
 
 case class MerchantCaseCreated(   partnerId: Int,
                                   merchantId: String,
@@ -55,9 +55,12 @@ case class MerchantCaseCreated(   partnerId: Int,
                                   caseId: String
                               ) extends MerchantTransactionEvent
 
+case class LogCreated(caseId:String, logName:String, logValue:String) extends MerchantTransactionEvent
 
 object MerchantTransactionEvent {
   implicit val format: Format[MerchantTransactionEvent]                      = derived.oformat()
   implicit val merchantCaseDataFormat: OFormat[MerchantCaseUpdated]         = Json.format[MerchantCaseUpdated]
   implicit val merchantCaseCloserFormat: OFormat[MerchantCaseCreated]     = Json.format[MerchantCaseCreated]
+  implicit val logCreatedFormat: OFormat[LogCreated]     = Json.format[LogCreated]
+
 }

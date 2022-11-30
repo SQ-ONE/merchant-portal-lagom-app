@@ -6,9 +6,7 @@ import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantTransactionResp
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantPortalError
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantTxnErr
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantCaseUpdated
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransaction
-import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransactionLog
+import com.squareoneinsights.merchantportallagomapp.impl.model.{LogCreated, MerchantCaseUpdated, MerchantTransaction, MerchantTransactionLog}
 import slick.jdbc.GetResult
 
 import java.sql.Timestamp
@@ -43,17 +41,29 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   }
 
   def saveTransaction(merchantTxn: MerchantTransaction): Future[Either[MerchantPortalError, Done]] = {
-    val query = merchantTransactionTable.insertOrUpdate(merchantTxn)
+
+    val query = merchantTransactionTable.filter(_.caseId ===merchantTxn.caseId).result.map{
+      merchantWithTry => if(merchantWithTry.isEmpty)   merchantTransactionTable += merchantTxn
+        else merchantTransactionTable.filter(_.caseId ===merchantTxn.caseId).update(merchantTxn)
+    }
+
     db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
       MerchantTxnErr(ex.getMessage).asLeft[Done]
     }
   }
 
   def updateByCaseRefNo(merchantCaseCloser: MerchantCaseUpdated): Future[Either[MerchantPortalError, Done]] = {
-    val query = merchantTransactionTable
-      .filter(_.caseRefNo === merchantCaseCloser.caseRefNo)
-      .map(_.investigationStatus)
-      .update(merchantCaseCloser.investigationStatus)
+   val query = merchantCaseCloser.investigatorComment match {
+     case Some(investigatorComment) => merchantTransactionTable
+       .filter(_.caseRefNo === merchantCaseCloser.caseRefNo)
+       .map(col =>( col.investigationStatus, col.txnResult, col.investigatorComment))
+       .update((merchantCaseCloser.investigationStatus, merchantCaseCloser.txnResult, investigatorComment))
+
+     case None => merchantTransactionTable
+       .filter(_.caseRefNo === merchantCaseCloser.caseRefNo)
+       .map(col =>( col.investigationStatus, col.txnResult))
+       .update(merchantCaseCloser.investigationStatus, merchantCaseCloser.txnResult)
+   }
     db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
       MerchantTxnErr(ex.getMessage).asLeft[Done]
     }
@@ -111,74 +121,87 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
       txnId: String,
       merchantId: String,
       partnerId: Int
-  ): Future[Either[String, MerchantTransactionDetails]] = {
+  ): Future[Either[MerchantTxnErr, MerchantTransactionDetails]] = {
+
+
     val query = merchantTransactionTable
       .filter { col =>
         (col.merchantId === merchantId && col.txnId === txnId && col.txnType === txnType && col.partnerId === partnerId)
       }
-      .join(merchantTransactionLogTable)
-      .on(_.txnId === _.txnId)
       .result
       .asTry
       .map { txnWithTry =>
         val fromTry =
-          Either.fromTry(txnWithTry).leftMap(err => err.getMessage)
+          Either.fromTry(txnWithTry).leftMap(err => MerchantTxnErr(err.getMessage))
         val fromOption = fromTry.flatMap { fromTrySeq =>
           Either.fromOption(
             fromTrySeq.headOption,
-            s"No transaction found with merchant id: $merchantId, with transaction id: $txnId and with transaction type: $txnType"
+         MerchantTxnErr(s"No transaction found with merchant id: $merchantId, with transaction id: $txnId and with transaction type: $txnType")
           )
         }
         fromOption.map { x =>
           {
             val txnDetails = TxnDetails(
-              x._1.channel,
-              x._1.customerId,
-              x._1.txnId,
-              x._1.txnAmount,
-              x._1.txnTimestamp.toString,
-              x._1.ifrmVerdict,
-              x._1.instrument,
-              x._1.location
+              x.channel,
+              x.customerId,
+              x.txnId,
+              x.txnAmount,
+              x.txnTimestamp.toString,
+              x.ifrmVerdict,
+              x.instrument,
+              x.location
             )
 
             val caseDetails = CaseDetails(
-              x._1.txnResult,
-              x._1.violationDetails,
-              x._1.txnId,
-              x._1.txnAmount,
-              x._1.txnTimestamp.toString,
-              x._1.investigatorComment,
-              x._1.caseId: String
+              x.txnResult,
+              x.violationDetails,
+              x.txnId,
+              x.txnAmount,
+              x.txnTimestamp.toString,
+              x.investigatorComment,
+              x.caseId: String
             )
 
-            val logDetails = Logs(
-              x._2.logName,
-              x._2.logValue
-            )
-
-            val caseLogDetails = List() :+ logDetails
-            MerchantTransactionDetails(txnDetails, caseDetails, caseLogDetails)
+            MerchantTransactionDetails(txnDetails, caseDetails, List())
           }
         }
       }
     db.run(query)
   }
+
+
+  def getLogs(caseId:String) : Future[Either[MerchantTxnErr,Seq[(String,String)]]] = {
+   val query = merchantTransactionLogTable.filter(_.caseId === caseId).map(col => (col.logName, col.logValue))
+      .result
+      .asTry.map {
+      merchantWithTry =>
+        Either.fromTry(merchantWithTry).leftMap(err => MerchantTxnErr(err.getMessage))
+    }
+    db.run(query)
+  }
+
+  def insertCaseLogs(log:LogCreated): Future[Either[MerchantPortalError, Done]] = {
+    val query = merchantTransactionLogTable += MerchantTransactionLog(log.caseId,log.logName,log.logValue)
+    db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
+      MerchantTxnErr(ex.getMessage).asLeft[Done]
+    }
+  }
+
 }
+
+
 
 trait MerchantTransactionLogTrait {
   class MerchantTransactionLogTable(tag: Tag)
       extends Table[MerchantTransactionLog](
         tag,
         _schemaName = Option("MERCHANT_PORTAL_ALERT_TRANSACTION"),
-        "MERCHANT_TRANSACTION_LOG"
+        "MERCHANT_TRANSACTION_LOGS"
       ) {
 
-    def * = (id, txnId, logName, logValue) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
+    def * = ( caseId, logName, logValue) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
 
-    def id = column[Option[Int]]("ID")
-
-    def txnId = column[String]("TXN_ID")
+    def caseId = column[String]("CASE_ID")
 
     def logName = column[String]("LOG_NAME")
 
