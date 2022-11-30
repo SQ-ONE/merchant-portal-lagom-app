@@ -43,6 +43,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   def saveTransaction(merchantTxn: MerchantTransaction): Future[Either[MerchantPortalError, Done]] = {
 
      db.run(merchantTransactionTable.filter(_.caseId ===merchantTxn.caseId).result).flatMap{ merchantWithTry =>
+       println(merchantWithTry)
        val query =if(merchantWithTry.isEmpty) merchantTransactionTable += merchantTxn
                     else merchantTransactionTable.filter(_.caseId ===merchantTxn.caseId).update(merchantTxn)
          db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
