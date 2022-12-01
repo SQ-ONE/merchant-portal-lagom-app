@@ -10,7 +10,8 @@ case class CaseDetails(
     txnAmount: Double,
     txnTimestamp: String,
     investigatorComment: String,
-    caseId: String
+    caseId: String,
+    investigationStatus:String
 )
 
 object CaseDetails {

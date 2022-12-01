@@ -6,27 +6,42 @@ import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantTransactionResp
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantPortalError
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantTxnErr
-import com.squareoneinsights.merchantportallagomapp.impl.model.{LogCreated, MerchantCaseUpdated, MerchantTransaction, MerchantTransactionLog}
+import com.squareoneinsights.merchantportallagomapp.impl.model.{AlertCategory, CaseDetails, LogCreated, MerchantCaseUpdated, MerchantTransaction, MerchantTransactionDetails, MerchantTransactionLog, TxnDetails}
 import slick.jdbc.GetResult
 
 import java.sql.Timestamp
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import com.squareoneinsights.merchantportallagomapp.api.response.MerchantTransactionDetails
-import com.squareoneinsights.merchantportallagomapp.api.response.TxnDetails
-import com.squareoneinsights.merchantportallagomapp.api.response.CaseDetails
-import com.squareoneinsights.merchantportallagomapp.api.response.CaseLogDetails
-import com.squareoneinsights.merchantportallagomapp.api.response.Logs
 
 case class FilterTXN(key: String, condition: String, value: String)
 
 class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
     extends MerchantTransactionTrait
-    with MerchantTransactionLogTrait {
+    with MerchantTransactionLogTrait
+    with MerchantTransactionCategoryTrait {
 
   val merchantTransactionTable    = TableQuery[MerchantTransactionTable]
   val merchantTransactionLogTable = TableQuery[MerchantTransactionLogTable]
+
+  val merchantTransactionCategoryTable = TableQuery[MerchantTransactionCategoryTable]
+
+  def getCategory(id:Int): Future[Either[MerchantTxnErr, AlertCategory]] ={
+    val query =
+      merchantTransactionCategoryTable.filter(m => m.id === id).result
+        .asTry
+        .map { txnWithTry =>
+          val fromTry =
+            Either.fromTry(txnWithTry).leftMap(err => MerchantTxnErr(err.getMessage))
+           fromTry.flatMap { fromTrySeq =>
+            Either.fromOption(
+              fromTrySeq.headOption,
+              MerchantTxnErr(s"no category found with id = $id")
+            )
+          }
+  }
+  db.run(query)
+  }
 
   def getTransactionsByType(
       merchantId: String,
@@ -51,6 +66,8 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
       }
       }
   }
+
+
 
   def updateByCaseRefNo(merchantCaseCloser: MerchantCaseUpdated): Future[Either[MerchantPortalError, Done]] = {
    val query = merchantCaseCloser.investigatorComment match {
@@ -104,8 +121,8 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   ): Future[Either[MerchantPortalError, Seq[MerchantTransactionResp]]] = {
 
     val sql = sql""" SELECT "TXN_ID","CASE_REF_NO","TXN_TIMESTAMP","TXN_AMOUNT","IFRM_VERDICT", "INVESTIGATION_STATUS",
-                     "CHANNEL","TXN_TYPE","RESPONSE_CODE"
-                   FROM "IFRM_LIST_LIMITS"."MERCHANT_TRANSACTION_DETAILS" WHERE
+                     "CHANNEL","INSTRUMENT","RESPONSE_CODE"
+                   FROM "MERCHANT_PORTAL_ALERT_TRANSACTION"."MERCHANT_TRANSACTION_DETAILS" WHERE
                      "MERCHANT_ID" = '#$merchantId' AND "TXN_TYPE" = '#$txnType' #${getFilter(obj)}  AND "PARTNER_ID" = '#$partnerId'
                      ORDER BY "TXN_TIMESTAMP" DESC
          """.as[MerchantTransactionResp]
@@ -116,14 +133,10 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
     db.run(resp) // todo
   }
 
-  def getTransactionDetails(
-      txnType: String,
-      txnId: String,
-      merchantId: String,
-      partnerId: Int
-  ): Future[Either[MerchantTxnErr, MerchantTransactionDetails]] = {
-
-
+  def getTransaction(txnType: String,
+                     txnId: String,
+                     merchantId: String,
+                     partnerId: Int): Future[Either[MerchantTxnErr, MerchantTransaction]]  = {
     val query = merchantTransactionTable
       .filter { col =>
         (col.merchantId === merchantId && col.txnId === txnId && col.txnType === txnType && col.partnerId === partnerId)
@@ -133,45 +146,18 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
       .map { txnWithTry =>
         val fromTry =
           Either.fromTry(txnWithTry).leftMap(err => MerchantTxnErr(err.getMessage))
-        val fromOption = fromTry.flatMap { fromTrySeq =>
+         fromTry.flatMap { fromTrySeq =>
           Either.fromOption(
             fromTrySeq.headOption,
-         MerchantTxnErr(s"No transaction found with merchant id: $merchantId, with transaction id: $txnId and with transaction type: $txnType")
+            MerchantTxnErr(s"No transaction found with merchant id: $merchantId, with transaction id: $txnId and with transaction type: $txnType")
           )
         }
-        fromOption.map { x =>
-          {
-            val txnDetails = TxnDetails(
-              x.channel,
-              x.customerId,
-              x.txnId,
-              x.txnAmount,
-              x.txnTimestamp.toString,
-              x.ifrmVerdict,
-              x.instrument,
-              x.location
-            )
-
-            val caseDetails = CaseDetails(
-              x.txnResult,
-              x.violationDetails,
-              x.txnId,
-              x.txnAmount,
-              x.txnTimestamp.toString,
-              x.investigatorComment,
-              x.caseId: String
-            )
-
-            MerchantTransactionDetails(txnDetails, caseDetails, List())
-          }
-        }
-      }
+  }
     db.run(query)
   }
 
-
-  def getLogs(caseId:String) : Future[Either[MerchantTxnErr,Seq[(String,String)]]] = {
-   val query = merchantTransactionLogTable.filter(_.caseId === caseId).map(col => (col.logName, col.logValue))
+  def getLogs(caseRefNo:String) : Future[Either[MerchantTxnErr,Seq[(String,String)]]] = {
+   val query = merchantTransactionLogTable.filter(_.caserefNo === caseRefNo).map(col => (col.logName, col.logValue))
       .result
       .asTry.map {
       merchantWithTry =>
@@ -199,9 +185,9 @@ trait MerchantTransactionLogTrait {
         "MERCHANT_TRANSACTION_LOGS"
       ) {
 
-    def * = ( caseId, logName, logValue) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
+    def * = ( caserefNo, logName, logValue) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
 
-    def caseId = column[String]("CASE_ID")
+    def caserefNo = column[String]("CASE_REF_NO")
 
     def logName = column[String]("LOG_NAME")
 
@@ -276,6 +262,24 @@ trait MerchantTransactionTrait {
     def investigatorComment = column[String]("INVESTIGATOR_COMMENT")
 
     def caseId = column[String]("CASE_ID")
+
+  }
+}
+
+
+trait MerchantTransactionCategoryTrait {
+  class MerchantTransactionCategoryTable(tag: Tag)
+    extends Table[AlertCategory](
+      tag,
+      _schemaName = Option("MERCHANT_PORTAL_ALERT_TRANSACTION"),
+      "ALERT_CATEGORY"
+    ) {
+
+    def * = ( id, categoryName) <> ((AlertCategory.apply _).tupled, AlertCategory.unapply)
+
+    def id = column[Int]("ID")
+
+    def categoryName = column[String]("CATEGORY_NAME")
 
   }
 }

@@ -28,7 +28,39 @@ case class MerchantTransaction(
     caseId: String
 )
 
-case class MerchantTransactionLog( caseId: String, logName: String, logValue: String)
+case class CaseDetails(
+                        caseRefNumber:String,
+                        txnResult: String,
+                        violationDetails: String,
+                        txnId: String,
+                        txnAmount: Double,
+                        txnTimestamp: String,
+                        investigatorComment: String,
+                        caseId: String,
+                        investigationStatus:String
+                      )
+
+
+case class TxnDetails(
+                       channel: String,
+                       customerId: String,
+                       txnId: String,
+                       txnAmount: Double,
+                       txnTimestamp: String,
+                       ifrmVerdict: String,
+                       instrument: String,
+                       location: String
+                     )
+
+case class MerchantTransactionDetails(
+                                       txnDetails: TxnDetails,
+                                       caseDetails: CaseDetails,
+                                       caseLogDetails: List[MerchantTransactionLog]
+                                     )
+
+case class MerchantTransactionLog( caseRefNumber: String, logName: String, logValue: String)
+
+case class AlertCategory( id: Int, categoryName: String)
 
 sealed trait MerchantTransactionEvent
 
@@ -43,7 +75,7 @@ case class MerchantCaseCreated(   partnerId: Int,
                                   ifrmVerdict: String,
                                   investigationStatus: String,
                                   channel: String,
-                                  alertType: String,
+                                  alertTypeId: Int,
                                   responseCode: String,
                                   customerId: String,  // entityId
                                   txnType: String,  // instrument
