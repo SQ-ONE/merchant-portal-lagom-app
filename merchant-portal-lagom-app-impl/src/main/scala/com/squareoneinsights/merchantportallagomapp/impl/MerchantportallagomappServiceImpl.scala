@@ -253,7 +253,7 @@ class MerchantportallagomappServiceImpl(
   override def getTxnSearchCriteriaList(partnerId: Int): ServiceCall[NotUsed, MerchantTxnSearchCriteria] =
     ServerServiceCall { _ =>
       val x =  List(TxnSearchCriteria("channel", "Channel"),
-              TxnSearchCriteria("responseCode","Response Code"),
+              TxnSearchCriteria("ifrmVerdict","Response Code"),
               TxnSearchCriteria("txnAmount","Transaction Amount"),
               TxnSearchCriteria("txnTimestamp","Transaction Date"),
               TxnSearchCriteria("txnType","Transaction Type")
@@ -267,7 +267,9 @@ class MerchantportallagomappServiceImpl(
       txnId: String,
       merchantId: String,
       partnerId: Int
-  ): ServiceCall[NotUsed, MerchantTransactionDetails] = ServerServiceCall { _ =>
+  ): ServiceCall[NotUsed, MerchantTransactionDetails] =
+    authorize((tokenContent, _) =>
+    ServerServiceCall { _ =>
     val resp =for {
     transaction <-  EitherT(merchantTransactionRepo.getTransaction(txnType, txnId, merchantId, partnerId))
     logsData <- EitherT(merchantTransactionRepo.getLogs(transaction.caseRefNo))
@@ -280,7 +282,8 @@ class MerchantportallagomappServiceImpl(
           val caseDetails= CaseDetails(txn.txnResult, txn.violationDetails, txn.txnId, txn.txnAmount, txn.txnTimestamp.toString, txn.investigatorComment, txn.caseId, txn.investigationStatus)
           MerchantTransactionDetails(txnDetails,caseDetails,logs.map(l => Logs(l._1,l._2)))
       }
-  }
+    }
+    )
 
   override def addRiskTypeNew(merchantId: String, partnerId: Int):
   ServiceCall[MerchantRiskScoreReq, String] =

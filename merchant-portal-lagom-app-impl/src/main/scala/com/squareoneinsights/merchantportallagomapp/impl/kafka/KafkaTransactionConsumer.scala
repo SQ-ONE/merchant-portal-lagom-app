@@ -9,7 +9,8 @@ import akka.stream.scaladsl.Sink
 import akka.stream.scaladsl.Source
 import cats.data.EitherT
 import com.lightbend.lagom.scaladsl.api.transport.BadRequest
-import com.squareoneinsights.merchantportallagomapp.impl.model.{LogCreated, MerchantCaseCreated, MerchantCaseUpdated, MerchantTransaction, MerchantTransactionEvent}
+import com.squareoneinsights.merchantportallagomapp.impl.kafka.events.{LogCreated, MerchantCaseCreated, MerchantCaseUpdated, MerchantTransactionEvent}
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantTransaction
 import com.squareoneinsights.merchantportallagomapp.impl.repository.MerchantTransactionRepo
 import com.squareoneinsights.merchantportallagomapp.impl.util.MerchantUtil
 import com.typesafe.config.ConfigFactory
@@ -20,6 +21,7 @@ import play.api.libs.json.Json
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.sql.Timestamp
+import java.time.LocalDateTime
 import scala.concurrent.duration.DurationInt
 import java.util.UUID
 import scala.util.Failure
@@ -34,6 +36,11 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
   private val topic                    = conf.getString("merchant.portal.transaction.kafka.consume.topic")
   private val kafkaBootstrapServers = conf.getString("merchant.portal.transaction.kafka.consumer-url")
   println(s"Inside KafkaConsumerTransactionAndLog.................")
+
+  import java.time.format.DateTimeFormatter
+
+  val dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+
   val createConsumerConfig = {
     ConsumerSettings(system, stringDeserializer, stringDeserializer)
       .withBootstrapServers(kafkaBootstrapServers)
@@ -53,7 +60,7 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
          transactions match {
            case x:MerchantCaseUpdated =>
             val resp = for { data <- EitherT(repo.updateByCaseRefNo(x))
-                            log <- EitherT(repo.insertCaseLogs(LogCreated(x.caseRefNo, s"Case ${x.investigationStatus}", s"Case ${x.investigationStatus} at ${new DateTime()}")))
+                            log <- EitherT(repo.insertCaseLogs(LogCreated(x.eventId,x.caseRefNo, s"Case ${x.investigationStatus}", s"Case ${x.investigationStatus} at ${dtf.format(LocalDateTime.now())}")))
                             } yield data
 
              resp.value.map {
@@ -68,14 +75,14 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
 
           case MerchantCaseCreated(partnerId, merchantId, txnId, caseRefNo, txnTimestamp, txnAmount, ifrmVerdict,
                 caseStatus, channel, alertTypeId, responseCode, customerId,
-                txnType, lat, long, txnResult, violationDetails, investigatorComment, caseId) =>
+                txnType, lat, long, txnResult, violationDetails, investigatorComment, caseId, eventId) =>
                  val result = for {
                                      alertType <- EitherT(repo.getCategory(alertTypeId))
                                           data <- EitherT(repo.saveTransaction(
                                                     MerchantTransaction(partnerId, merchantId, txnId, caseRefNo, Timestamp.valueOf(txnTimestamp), txnAmount,
                                                     ifrmVerdict, caseStatus, channel, alertType.categoryName, responseCode, customerId, txnType, MerchantUtil.findLocation(lat, long),
                                                     txnResult, violationDetails, investigatorComment, caseId)))
-                                           log <- EitherT(repo.insertCaseLogs(LogCreated(caseRefNo, "Case Created", s"Case created at $txnTimestamp")))
+                                           log <- EitherT(repo.insertCaseLogs(LogCreated(eventId,caseRefNo, "Case Created", s"Case created at ${dtf.format(LocalDateTime.now())}")))
                                     } yield data
 
                                  result.value.map {

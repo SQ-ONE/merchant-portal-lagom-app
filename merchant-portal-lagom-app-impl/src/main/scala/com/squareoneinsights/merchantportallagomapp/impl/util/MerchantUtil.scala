@@ -4,7 +4,7 @@ object MerchantUtil {
 
   val conditionMap = Map("EQUAL" -> "=", "LESSTHEN" -> "<")
 
-  val filterColumn = Map("channel" -> "CHANNEL", "responseCode" -> "RESPONSE_CODE", "txnAmount"-> "TXN_AMOUNT", "txnTimestamp" -> "TXN_TIMESTAMP", "txnType" -> "TXN_TYPE" )
+  val filterColumn = Map("channel" -> "CHANNEL", "ifrmVerdict" -> "IFRM_VERDICT", "txnAmount"-> "TXN_AMOUNT", "txnTimestamp" -> "TXN_TIMESTAMP", "txnType" -> "INSTRUMENT" )
 
   def findLocation(lat:Double, long:Double): String = "Mumbai"
 }

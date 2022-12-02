@@ -6,7 +6,8 @@ import cats.syntax.either._
 import com.squareoneinsights.merchantportallagomapp.api.response.MerchantTransactionResp
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantPortalError
 import com.squareoneinsights.merchantportallagomapp.impl.common.MerchantTxnErr
-import com.squareoneinsights.merchantportallagomapp.impl.model.{AlertCategory, CaseDetails, LogCreated, MerchantCaseUpdated, MerchantTransaction, MerchantTransactionDetails, MerchantTransactionLog, TxnDetails}
+import com.squareoneinsights.merchantportallagomapp.impl.kafka.events.{LogCreated, MerchantCaseUpdated}
+import com.squareoneinsights.merchantportallagomapp.impl.model.{AlertCategory, MerchantTransaction, MerchantTransactionLog}
 import slick.jdbc.GetResult
 
 import java.sql.Timestamp
@@ -86,13 +87,6 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
     }
   }
 
-  def saveTransactionLog(merchantTxnLog: MerchantTransactionLog): Future[Either[MerchantPortalError, Done]] = {
-    val query = merchantTransactionLogTable += merchantTxnLog
-    db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
-      MerchantTxnErr(ex.getMessage).asLeft[Done]
-    }
-  }
-
   implicit val getSupplierResult = GetResult(r =>
     MerchantTransactionResp(
       r.nextString,
@@ -110,7 +104,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   def getFilter(filterTXN: FilterTXN): String = filterTXN.key match {
     case "TXN_TIMESTAMP" =>
       s"""AND "TXN_TIMESTAMP" >= '${filterTXN.value} 00:00:00.000' AND "TXN_TIMESTAMP" <= '${filterTXN.value} 23:59:59.900'"""
-    case _ => s"""AND "${filterTXN.key}" ${filterTXN.condition} '${filterTXN.value}' """
+    case _ => s"""AND Lower("${filterTXN.key}") ${filterTXN.condition} Lower('${filterTXN.value}') """
   }
 
   def getTransactionsBySearch(
@@ -167,9 +161,14 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   }
 
   def insertCaseLogs(log:LogCreated): Future[Either[MerchantPortalError, Done]] = {
-    val query = merchantTransactionLogTable += MerchantTransactionLog(log.caseId,log.logName,log.logValue)
-    db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
-      MerchantTxnErr(ex.getMessage).asLeft[Done]
+val data = MerchantTransactionLog(log.logId, log.caseRefNum,log.logName,log.logValue)
+    db.run(merchantTransactionLogTable.filter(_.logId ===log.logId).result).flatMap{ merchantLogTry =>
+      println(merchantLogTry)
+      val query =if(merchantLogTry.isEmpty) merchantTransactionLogTable += data
+      else merchantTransactionLogTable.filter(_.logId === data.logId).update(data)
+      db.run(query).map(_ => Done.asRight[MerchantPortalError]).recover { case ex =>
+        MerchantTxnErr(ex.getMessage).asLeft[Done]
+      }
     }
   }
 
@@ -185,7 +184,9 @@ trait MerchantTransactionLogTrait {
         "MERCHANT_TRANSACTION_LOGS"
       ) {
 
-    def * = ( caserefNo, logName, logValue) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
+    def * = ( logId,caserefNo, logName, logValue) <> ((MerchantTransactionLog.apply _).tupled, MerchantTransactionLog.unapply)
+
+    def logId = column[String]("LOG_ID")
 
     def caserefNo = column[String]("CASE_REF_NO")
 
