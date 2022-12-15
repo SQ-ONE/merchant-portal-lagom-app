@@ -23,8 +23,8 @@ class MerchantLoginRepo(db: Database)
 
   val merchantRisk = TableQuery[MerchantRiskScoreDetailTable]
 
-  def getUserByName(userName: String): Future[Either[GetUserDetailErr, MerchantLoginDetails]] = {
-    val query = (merchantLoginTable.filter(col => (col.merchantId === userName)))
+  def getUserByName(userName: String, partnerId:Int): Future[Either[GetUserDetailErr, MerchantLoginDetails]] = {
+    val query = (merchantLoginTable.filter(col => (col.merchantId === userName) && col.partnerId=== partnerId))
       .result.asTry.map { merchantWithTry =>
       val fromTry = Either.fromTry(merchantWithTry).leftMap(err => GetUserDetailErr(err.getMessage))
       val fromOption = fromTry.flatMap { fromTrySeq =>
@@ -48,7 +48,7 @@ class MerchantLoginRepo(db: Database)
     }
   }
 
-  def logoutActivity(merchantId: String, partnerId: Int = 1): Future[Either[MerchantPortalError, Done]] = {
+  def logoutActivity(merchantId: String, partnerId: Int): Future[Either[MerchantPortalError, Done]] = {
     val action2 = merchantLoginActivityTable += MerchantLoginActivity(None, merchantId, partnerId ,None, Some(Timestamp.valueOf(LocalDateTime.now())))
     db.run(action2)
       .map { _ =>
