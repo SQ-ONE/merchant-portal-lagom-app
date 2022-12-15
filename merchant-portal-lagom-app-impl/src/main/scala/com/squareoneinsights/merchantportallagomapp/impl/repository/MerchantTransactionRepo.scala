@@ -238,7 +238,7 @@ trait MerchantTransactionTrait {
 
     def txnTimestamp = column[Timestamp]("TXN_TIMESTAMP")
 
-    def txnAmount = column[Int]("TXN_AMOUNT")
+    def txnAmount = column[Double]("TXN_AMOUNT")
 
     def ifrmVerdict = column[String]("IFRM_VERDICT")
 

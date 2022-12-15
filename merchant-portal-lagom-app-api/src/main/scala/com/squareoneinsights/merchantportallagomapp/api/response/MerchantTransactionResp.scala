@@ -7,7 +7,7 @@ import java.sql.Timestamp
 case class MerchantTransactionResp(txnId:String,
                                    caseRefNo:String,
                                    txnTimestamp:String,
-                                   txnAmount:Int,
+                                   txnAmount:Double,
                                    ifrmVerdict:String,
                                    investigationStatus:String,
                                    channel:String,

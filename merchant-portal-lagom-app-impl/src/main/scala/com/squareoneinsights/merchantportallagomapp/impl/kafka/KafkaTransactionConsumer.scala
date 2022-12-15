@@ -73,15 +73,16 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
                 }
               }
 
-          case MerchantCaseCreated(partnerId, merchantId, txnId, caseRefNo, txnTimestamp, txnAmount, ifrmVerdict,
-                caseStatus, channel, alertTypeId, responseCode, customerId,
-                txnType, lat, long, txnResult, violationDetails, investigatorComment, caseId, eventId) =>
+          case MerchantCaseCreated(caseId: Int,
+          partnerId, caseRefNo, txnAmount, txnTimestamp, txnId, txnType, channel, _, _, merchantId, alertTypeId,
+          responseCode, customerId: Option[String], ifrmVerdict: String, _, _, _, remarks,
+          _, _, _, caseStatus, _, _, _, _, _, violationDetails, _, _, _, txnResult, lat, long, eventId) =>
                  val result = for {
                                      alertType <- EitherT(repo.getCategory(alertTypeId))
                                           data <- EitherT(repo.saveTransaction(
                                                     MerchantTransaction(partnerId, merchantId, txnId, caseRefNo, Timestamp.valueOf(txnTimestamp), txnAmount,
-                                                    ifrmVerdict, caseStatus, channel, alertType.categoryName, responseCode, customerId, txnType, MerchantUtil.findLocation(lat, long),
-                                                    txnResult, violationDetails, investigatorComment, caseId)))
+                                                    ifrmVerdict, caseStatus, channel, alertType.categoryName, responseCode.getOrElse("NA"), customerId.getOrElse("NA"), txnType, MerchantUtil.findLocation(lat, long),
+                                                    txnResult, violationDetails, remarks, caseId.toString)))
                                            log <- EitherT(repo.insertCaseLogs(LogCreated(eventId,caseRefNo, "Case Created", s"Case created at ${dtf.format(LocalDateTime.now())}")))
                                     } yield data
 
@@ -95,7 +96,7 @@ class KafkaTransactionConsumer(repo: MerchantTransactionRepo, implicit val syste
 
 
           case _ =>
-            println("Invalid message body " + message)
+            println("Invalid message body not refactored" + message)
         }
       case Failure(exception) => println("Invalid message body " + message, exception)
     }

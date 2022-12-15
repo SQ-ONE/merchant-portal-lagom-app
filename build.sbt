@@ -49,7 +49,6 @@ val kafkaClient =  "org.apache.kafka" % "kafka-clients" % "0.10.0.0"
 val playJsonDerivedCodecs = "org.julienrf" %% "play-json-derived-codecs" % "4.0.0"
 val akkaQuartz =  "com.enragedginger" %% "akka-quartz-scheduler" % "1.9.2-akka-2.6.x"
 
-
 lazy val `merchant-portal-lagom-apps` = (project in file("."))
   .aggregate(`merchant-portal-lagom-app-api`, `merchant-portal-lagom-app-impl`)
 

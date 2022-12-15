@@ -13,7 +13,7 @@ case class MerchantTransaction(
     txnId: String,
     caseRefNo: String,
     txnTimestamp: Timestamp,
-    txnAmount: Int,
+    txnAmount: Double,
     ifrmVerdict: String,
     investigationStatus: String,
     channel: String,
