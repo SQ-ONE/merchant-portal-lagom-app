@@ -6,12 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="ac4ef604-e1f4-4d49-ac44-cb0575178670" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/MerchantTransactionResp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-api/src/main/scala/com/squareoneinsights/merchantportallagomapp/api/response/MerchantTransactionResp.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/kafka/KafkaTransactionConsumer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/kafka/KafkaTransactionConsumer.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/kafka/events/MerchantTransactionEvent.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/kafka/events/MerchantTransactionEvent.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/model/MerchantTransactions.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/model/MerchantTransactions.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantTransactionRepo.scala" beforeDir="false" afterPath="$PROJECT_DIR$/merchant-portal-lagom-app-impl/src/main/scala/com/squareoneinsights/merchantportallagomapp/impl/repository/MerchantTransactionRepo.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
