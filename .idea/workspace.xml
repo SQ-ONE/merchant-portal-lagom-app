@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac4ef604-e1f4-4d49-ac44-cb0575178670" name="Changes" comment="">
+    <list default="true" id="7ff5fc69-ddd4-43d2-a55b-2e05fb735064" name="Default Changelist" comment="idea file changes">
+      <change beforePath="$PROJECT_DIR$/.bsp/sbt.json" beforeDir="false" afterPath="$PROJECT_DIR$/.bsp/sbt.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -81,7 +82,6 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="ac4ef604-e1f4-4d49-ac44-cb0575178670" name="Changes" comment="" />
       <created>1669978424352</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
@@ -99,5 +99,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="idea file changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="idea file changes" />
   </component>
 </project>
