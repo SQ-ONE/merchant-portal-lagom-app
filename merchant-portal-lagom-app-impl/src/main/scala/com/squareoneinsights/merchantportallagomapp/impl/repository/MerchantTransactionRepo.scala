@@ -104,6 +104,7 @@ class MerchantTransactionRepo(db: Database)(implicit ec: ExecutionContext)
   def getFilter(filterTXN: FilterTXN): String = filterTXN.key match {
     case "TXN_TIMESTAMP" =>
       s"""AND "TXN_TIMESTAMP" >= '${filterTXN.value} 00:00:00.000' AND "TXN_TIMESTAMP" <= '${filterTXN.value} 23:59:59.900'"""
+    case "TXN_AMOUNT" => s"""AND "${filterTXN.key}" ${filterTXN.condition} '${filterTXN.value}' """
     case _ => s"""AND Lower("${filterTXN.key}") ${filterTXN.condition} Lower('${filterTXN.value}') """
   }
 
