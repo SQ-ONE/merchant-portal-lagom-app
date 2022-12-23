@@ -70,7 +70,7 @@ class MerchantRiskScoreDetailRepo(db: Database)
     db.run(fetchMessage.result.headOption)
       .map { fromTryMerchant =>
         Either.fromOption(fromTryMerchant.map(seqMerchant => MerchantRiskScoreResp(seqMerchant._1,
-          RiskType.withName(seqMerchant._2), RiskType.withName(seqMerchant._3), seqMerchant._4)),
+          RiskType.withName(seqMerchant._2.trim), RiskType.withName(seqMerchant._3.trim), seqMerchant._4)),
           GetMerchantErr("No merchant found for MerchantId: ${merchantId}"))
       }
   }
