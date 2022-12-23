@@ -47,7 +47,7 @@ class Pac4jAuthorizer(system: ActorSystem) extends SecuredService {
     val tokenO = requestHeader.getHeader("Cookie")
     val result = for {
       token <- tokenO
-      authToken <- token.split("=").lift(1)
+      authToken <- Some(token.split("; ")(0).split("=")(1))
     } yield authToken
     result.getOrElse("")
   }
