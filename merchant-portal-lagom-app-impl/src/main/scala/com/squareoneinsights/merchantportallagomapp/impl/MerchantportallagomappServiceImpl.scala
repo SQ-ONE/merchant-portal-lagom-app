@@ -23,9 +23,10 @@ import com.squareoneinsights.merchantportallagomapp.api.request.MerchantRiskScor
 import com.squareoneinsights.merchantportallagomapp.api.request.RiskType
 import com.squareoneinsights.merchantportallagomapp.api.request.TransactionFilterReq
 import com.squareoneinsights.merchantportallagomapp.api.response.{BusinessImpact, CaseDetails, Logs, MerchantImpactDataResp, MerchantLoginResp, MerchantRiskScoreResp, MerchantTransactionDetails, MerchantTransactionResp, MerchantTxnSearchCriteria, PartnerInfo, ResponseMessage, TxnDetails, TxnSearchCriteria}
-import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, FailedToGetPartner, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, MerchantTxnErr, Pac4jAuthorizer, RedisUtility, RiskSettingProducerErr, TokenContent, UpdateLogInRedisErr, UpdatedRiskErr}
+import com.squareoneinsights.merchantportallagomapp.impl.common.{AddMerchantErr, CreateLogInTokenErr, FailedToGetPartner, GetBusinessImpactErr, GetMerchantErr, GetMerchantOnboard, GetUserDetailErr, JwtTokenGenerator, LogoutErr, LogoutRedisErr, MerchantPortalError, MerchantTxnErr, Pac4jAuthorizer, RedisUtility, RiskSettingProducerErr, Token, TokenContent, UpdateLogInRedisErr, UpdatedRiskErr}
 import com.squareoneinsights.merchantportallagomapp.impl.MerchantportallagomappServiceImpl.tokenValidityInMinutes
 import com.squareoneinsights.merchantportallagomapp.impl.kafka.KafkaProduceService
+import com.squareoneinsights.merchantportallagomapp.impl.model.MerchantLoginDetails
 import com.squareoneinsights.merchantportallagomapp.impl.repository.{BusinessImpactRepo, FilterTXN, MerchantLoginRepo, MerchantOnboardRiskScore, MerchantRiskScoreDetailRepo, MerchantTransactionRepo, PartnerInfoRepo}
 import com.squareoneinsights.merchantportallagomapp.impl.util.MerchantUtil
 import com.typesafe.config.Config
@@ -119,8 +120,8 @@ class MerchantportallagomappServiceImpl(
     })
 
   override def login = ServerServiceCall{(requestHeader, userLoginDetails) =>
-    val resp = for {
-      merchant      <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName, userLoginDetails.partnerId))
+    val resp: EitherT[Future, MerchantPortalError, (MerchantLoginDetails, Token)] = for {
+      merchant      <- EitherT(merchantLoginRepo.getUserByName(userLoginDetails.userName))
       tokenContent  <- EitherT.rightT(TokenContent(merchant.merchantId, merchant.merchantName))
       jwt           <- EitherT(JwtTokenGenerator.createToken(tokenContent, new DateTime().plusMinutes(tokenValidityInMinutes).toDate))
                   _ <- EitherT(merchantLoginRepo.updateMerchantLoginInfo(merchant))
@@ -151,10 +152,10 @@ class MerchantportallagomappServiceImpl(
     authorize((tokenContent, _) =>
     ServerServiceCall { req =>
     val query = for {
-      merchant      <- EitherT(merchantLoginRepo.getUserByName(req.userName, req.partnerId))
+      merchant      <- EitherT(merchantLoginRepo.getUserByName(req.userName))
       updateStatus  <- EitherT(merchantLoginRepo.updateMerchantLoginStatus(req.userName))
       del           <- EitherT(redisUtility.deleteTokenFromRedis(req.userName))
-                   _<- EitherT(merchantLoginRepo.logoutActivity(merchant.merchantId, req.partnerId))
+                   _<- EitherT(merchantLoginRepo.logoutActivity(merchant.merchantId, merchant.partnerId))
       delR <- EitherT(redisUtility.deleteTokenFromRedis(req.userName+"_refreshToken"))
     } yield(del)
     query.value.map {
