@@ -149,7 +149,6 @@ class MerchantportallagomappServiceImpl(
   }
 
   override def logOut: ServiceCall[LogOutReq, ResponseMessage] =
-    authorize((tokenContent, _) =>
     ServerServiceCall { req =>
     val query = for {
       merchant      <- EitherT(merchantLoginRepo.getUserByName(req.userName))
@@ -170,7 +169,7 @@ class MerchantportallagomappServiceImpl(
         ResponseMessage.apply("Logout Successfully")
       }
     }
-  })
+  }
 
   override def getPartner: ServiceCall[NotUsed, Seq[PartnerInfo]] =
       ServerServiceCall { _ =>
